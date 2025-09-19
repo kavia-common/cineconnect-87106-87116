@@ -1,82 +1,65 @@
-# Lightweight React Template for KAVIA
+# Cinemadrops Frontend (React)
 
-This project provides a minimal React template with a clean, modern UI and minimal dependencies.
+Cinemadrops is a playful, community-driven platform for short films. This frontend implements:
+- Discovery feed and curated lists
+- Detailed film pages with behind-the-scenes and scripts
+- Creator profiles
+- Comments and forums
+- Weekly challenges
+- Live chat and real-time notifications via WebSockets
+- Responsive multi-column layout with top navigation, sidebars, and modal drawers
 
-## Features
+## Tech
+- React 18 + React Router v6
+- SWR for data fetching
+- socket.io-client for real-time features
+- No heavy UI framework; handcrafted playful CSS
 
-- **Lightweight**: No heavy UI frameworks - uses only vanilla CSS and React
-- **Modern UI**: Clean, responsive design with KAVIA brand styling
-- **Fast**: Minimal dependencies for quick loading times
-- **Simple**: Easy to understand and modify
-
-## Getting Started
-
-In the project directory, you can run:
-
-### `npm start`
-
-Runs the app in development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
-
-### `npm test`
-
-Launches the test runner in interactive watch mode.
-
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-## Customization
-
-### Colors
-
-The main brand colors are defined as CSS variables in `src/App.css`:
-
-```css
-:root {
-  --kavia-orange: #E87A41;
-  --kavia-dark: #1A1A1A;
-  --text-color: #ffffff;
-  --text-secondary: rgba(255, 255, 255, 0.7);
-  --border-color: rgba(255, 255, 255, 0.1);
-}
+## Run locally
+1) Copy environment config
+```
+cp .env.example .env
+```
+2) Edit `.env` and set:
+```
+REACT_APP_API_BASE=http://localhost:4000
+REACT_APP_WS_BASE=ws://localhost:4000
+```
+3) Install and start
+```
+npm install
+npm start
 ```
 
-### Components
+Open http://localhost:3000
 
-This template uses pure HTML/CSS components instead of a UI framework. You can find component styles in `src/App.css`. 
+Note: This UI expects a REST API and WebSocket server. If none is available, demo fallback data is shown and sockets will simply connect without guaranteed events.
 
-Common components include:
-- Buttons (`.btn`, `.btn-large`)
-- Container (`.container`)
-- Navigation (`.navbar`)
-- Typography (`.title`, `.subtitle`, `.description`)
+## Project Structure
+- src/services/Api.js — API helpers and SWR
+- src/services/Socket.js — WebSocket provider
+- src/components/* — Reusable UI components (TopNav, Sidebars, FilmCard, Comments)
+- src/pages/* — Route pages (Home, FilmDetails, CreatorProfile, Forums, Challenges, Curated)
+- src/drawers/* — Chat, Notifications, Quick Actions
+- src/index.css — Playful theme styles per style guide
 
-## Learn More
+## Style Guide
+Colors (from styleThemeData):
+- Primary: #0FA3B1
+- Secondary/Success: #FFB627
+- Error: #ED6A5A
+- Background: #F7F9F9
+- Surface: #FFFFFF
+- Text: #2F4858
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+Layout:
+- Top navigation bar
+- Left filters and right trending sidebars
+- Main content area
+- Modal drawers for chat, notifications, and quick actions
 
-### Code Splitting
+## Environment Variables
+- REACT_APP_API_BASE — Base URL for REST (required)
+- REACT_APP_WS_BASE — Base URL for WebSockets (required)
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Do not commit real secrets; use `.env` locally and deployment env vars in production.
