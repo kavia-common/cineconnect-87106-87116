@@ -1,47 +1,49 @@
 <!DOCTYPE html>
+<!--
+  Cinemadrops Frontend — React Single Page Application
+  This is the main HTML entry point for the Cinemadrops SPA. React mounts into the #root div below.
+  Uses a playful, vibrant style: primary #0FA3B1 (accent), secondary #FFB627 (highlights),
+  background #F7F9F9, surface #FFFFFF, and text #2F4858.
+-->
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#1A1A1A" />
-    <meta
-      name="description"
-      content="KAVIA AI Application"
-    />
-    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
-    <!--
-      manifest.json provides metadata used when your web app is installed on a
-      user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
-    -->
-    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-    <!--
-      Notice the use of %PUBLIC_URL% in the tags above.
-      It will be replaced with the URL of the `public` folder during the build.
-      Only files inside the `public` folder can be referenced from the HTML.
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 
-      Unlike "/favicon.ico" or "favicon.ico", "%PUBLIC_URL%/favicon.ico" will
-      work correctly both with client-side routing and a non-root public URL.
-      Learn how to configure a non-root public URL by running `npm run build`.
+    <!-- Viewport for responsive layout -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+
+    <!-- Primary theme color (matches style guide primary) -->
+    <meta name="theme-color" content="#0FA3B1" />
+
+    <!-- Favicons (CRA will copy /public assets as-is) -->
+    <link rel="icon" href="/favicon.ico" />
+
+    <!-- App Title -->
+    <title>Cinemadrops - Short Film Community</title>
+
+    <!--
+      Playful look and feel notes (no external CSS here; app styles come from src/index.css):
+      - Use #0FA3B1 for primary accents (buttons, key UI accents)
+      - Use #FFB627 for cheerful highlights (secondary actions/badges)
+      - Use #F7F9F9 as background and #FFFFFF as surface
+      - Text color: #2F4858
+      - Lively gradients and rounded corners are applied via CSS in the app
     -->
-    <!-- Load Inter font -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <title>KAVIA App</title>
+
+    <!-- Preload Inter-like system fonts if available on device (no external font imports for CRA defaults) -->
+    <meta name="description" content="Cinemadrops is a playful, community-driven platform for discovering and sharing short films with behind-the-scenes, scripts, forums, and weekly challenges." />
   </head>
-  <body>
+  <body style="background:#F7F9F9; color:#2F4858; margin:0;">
     <noscript>You need to enable JavaScript to run this app.</noscript>
+
+    <!-- React mounts here -->
     <div id="root"></div>
+
     <!--
-      This HTML file is a template.
-      If you open it directly in the browser, you will see an empty page.
-
-      You can add webfonts, meta tags, or analytics to this file.
-      The build step will place the bundled scripts into the <body> tag.
-
-      To begin the development, run `npm start` or `yarn start`.
-      To create a production bundle, use `npm run build` or `yarn build`.
+      Note:
+      - No custom scripts are included here; create-react-app tooling injects the JS bundles automatically.
+      - All styling and theming is handled in src/index.css and component styles.
     -->
   </body>
 </html>
