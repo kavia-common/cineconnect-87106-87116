@@ -5,6 +5,7 @@
 import { initializeApp } from 'firebase/app';
 import { getStorage } from 'firebase/storage';
 import { getAnalytics, isSupported as isAnalyticsSupported } from 'firebase/analytics';
+import { getFirestore } from 'firebase/firestore';
 
 /**
  * Firebase configuration for Cinemadrops.
@@ -25,21 +26,23 @@ const firebaseConfig = {
 // Initialize Firebase App (singleton)
 const app = initializeApp(firebaseConfig);
 
-// PUBLIC_INTERFACE
+/** Storage instance for uploads */
 export const storage = getStorage(app);
+/** Firestore instance for metadata */
+export const db = getFirestore(app);
 /** This is a public export for consumers to optionally use the Firebase app instance. */
-// PUBLIC_INTERFACE
 export { app };
 
 /**
  * Optionally export Analytics if supported (in browser contexts).
  * Some test and SSR environments may not support Analytics; we guard accordingly.
  */
-// PUBLIC_INTERFACE
 export let analytics = null;
 (async () => {
   try {
-    if (await isAnalyticsSupported()) {
+    // Only try analytics in real browser environment
+    const isBrowser = typeof window !== 'undefined' && typeof document !== 'undefined';
+    if (isBrowser && (await isAnalyticsSupported())) {
       analytics = getAnalytics(app);
     }
   } catch {

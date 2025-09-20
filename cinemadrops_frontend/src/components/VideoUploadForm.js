@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import VideoUpload from './VideoUpload';
-import { useApi } from '../services/Api';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '../firebase';
 
 /**
  * PUBLIC_INTERFACE
@@ -18,8 +19,6 @@ import { useApi } from '../services/Api';
  * - Categories input is a comma-separated string, normalized to an array.
  */
 export default function VideoUploadForm({ onSuccess }) {
-  const { post } = useApi();
-
   // Upload state from child
   const [videoUrl, setVideoUrl] = useState('');
   const [uploadMeta, setUploadMeta] = useState(null);
@@ -30,7 +29,7 @@ export default function VideoUploadForm({ onSuccess }) {
   const [categories, setCategories] = useState(''); // comma-separated
   const [rated, setRated] = useState('');
 
-  // Reaction counts (optional, defaults handled by backend)
+  // Reaction counts (initial values to store in Firestore)
   const [likes] = useState(0);
   const [dislikes] = useState(0);
   const [loves] = useState(0);
@@ -55,33 +54,45 @@ export default function VideoUploadForm({ onSuccess }) {
     setSaveError('');
     setSaveSuccess(false);
     try {
+      // Normalize categories into array of strings <= 50 chars
       const cats = categories
         .split(',')
         .map(c => c.trim())
-        .filter(Boolean);
+        .filter(Boolean)
+        .map(c => (c.length > 50 ? c.slice(0, 50) : c));
 
-      // Construct payload matching backend API: { videoUrl, name, creator, categories, rated, likes, dislikes, loves }
-      const payload = {
+      // Shape document similar to previous Mongo schema
+      const docData = {
         videoUrl,
         name: name.trim(),
         creator: creator.trim(),
         categories: cats,
         rated: rated.trim(),
-        likes,
         dislikes,
+        likes,
         loves,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        // Optional: store a bit of storage upload metadata for reference
+        _storage: uploadMeta
+          ? {
+              path: uploadMeta.path,
+              contentType: uploadMeta.contentType,
+              size: uploadMeta.size,
+              name: uploadMeta.name,
+            }
+          : null,
       };
 
-      // Note: Api.js prefixes base URL using REACT_APP_API_BASE. Do not hard-code full URL here.
-      const created = await post('/videos', payload);
+      const colRef = collection(db, 'videos');
+      const docRef = await addDoc(colRef, docData);
 
       setSaveSuccess(true);
       if (typeof onSuccess === 'function') {
-        onSuccess(created);
+        onSuccess({ id: docRef.id, ...docData });
       }
     } catch (e) {
-      // Provide readable feedback
-      setSaveError(e?.message || 'Failed to save metadata.');
+      setSaveError(e?.message || 'Failed to save metadata to Firestore.');
     } finally {
       setSaving(false);
     }
