@@ -64,6 +64,17 @@ img { max-width: 100%; display: block; }
   box-shadow: 0 10px 30px rgba(0,0,0,0.05);
 }
 
+/* Ensure consistent, adequate padding for all primary boxes */
+.section {
+  padding: 16px;
+}
+
+@media (max-width: 700px) {
+  .section {
+    padding: 14px;
+  }
+}
+
 /* Layout */
 .app-shell {
   display: grid;
@@ -169,6 +180,7 @@ img { max-width: 100%; display: block; }
   margin-top: 6px;
 }
 .reaction-btn {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -181,10 +193,39 @@ img { max-width: 100%; display: block; }
   box-shadow: 0 4px 10px rgba(0,0,0,0.04);
   transition: transform .12s ease, box-shadow .2s ease, border-color .2s ease, color .2s ease, background .2s ease;
 }
-.reaction-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(0,0,0,0.06); }
+.reaction-btn:hover { 
+  transform: translateY(-1px); 
+  box-shadow: 0 6px 16px rgba(0,0,0,0.06); 
+  background: #ffffff;
+}
+.reaction-btn:focus-visible {
+  outline: 2px solid rgba(15, 163, 177, 0.5);
+  outline-offset: 2px;
+}
 .reaction-btn.active {
   background: #fff7f1;
 }
+
+/* Hide labels by default, reveal on hover/focus for playful, discoverable UI */
 .reaction-btn .reaction-label {
   font-size: 12px;
+  opacity: 0;
+  max-width: 0;
+  transform: translateX(-2px);
+  white-space: nowrap;
+  overflow: hidden;
+  transition: opacity .15s ease, max-width .2s ease, transform .15s ease;
+  pointer-events: none;
+}
+.reaction-btn:hover .reaction-label,
+.reaction-btn:focus-visible .reaction-label {
+  opacity: 1;
+  max-width: 120px; /* enough to show 'Life Changing' */
+  transform: translateX(0);
+  pointer-events: auto;
+}
+
+/* Slight color pop on hover to fit vibrant theme */
+.reaction-btn:hover {
+  border-color: rgba(15, 163, 177, 0.35);
 }
