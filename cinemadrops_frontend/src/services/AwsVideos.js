@@ -50,8 +50,11 @@ export async function getVideoByKey(videoKey) {
   return ct.includes('application/json') ? res.json() : res.text();
 }
 
-// PUBLIC_INTERFACE
-export async function uploadVideo({ file, title, description }) {
+/**
+ * PUBLIC_INTERFACE
+ * uploadVideo now accepts optional competition info and includes it in the payload.
+ */
+export async function uploadVideo({ file, title, description, competitionId, competitionName }) {
   /**
    * Upload a video using POST endpoint.
    * If backend expects multipart/form-data, we send FormData with file and metadata.
@@ -59,11 +62,21 @@ export async function uploadVideo({ file, title, description }) {
    */
   const url = `${BASE}/resources/UPLOAD`;
 
+  const addCompetitionToForm = (form) => {
+    if (competitionId != null && competitionId !== '') form.append('competitionId', String(competitionId));
+    if (competitionName != null && competitionName !== '') form.append('competitionName', String(competitionName));
+  };
+  const addCompetitionToJson = (payload) => {
+    if (competitionId != null && competitionId !== '') payload.competitionId = competitionId;
+    if (competitionName != null && competitionName !== '') payload.competitionName = competitionName;
+  };
+
   if (file) {
     const form = new FormData();
     form.append('file', file);
     if (title) form.append('title', title);
     if (description) form.append('description', description);
+    addCompetitionToForm(form);
 
     const res = await fetch(url, {
       method: 'POST',
@@ -74,6 +87,7 @@ export async function uploadVideo({ file, title, description }) {
     return ct.includes('application/json') ? res.json() : res.text();
   } else {
     const payload = { title, description };
+    addCompetitionToJson(payload);
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

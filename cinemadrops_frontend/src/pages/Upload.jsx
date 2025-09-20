@@ -5,6 +5,7 @@ import { useReactions } from '../services/Reactions';
 /**
  * PUBLIC_INTERFACE
  * Upload page: allows uploading new videos via AWS API Gateway and lists available videos from the same API.
+ * Adds competition selection; selected competition is sent along with the upload payload.
  */
 export default function Upload() {
   const [file, setFile] = useState(null);
@@ -14,6 +15,19 @@ export default function Upload() {
   const [error, setError] = useState('');
   const [videos, setVideos] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
+
+  // Competition state
+  const [competitionId, setCompetitionId] = useState('');
+  const [competitionName, setCompetitionName] = useState('');
+  const [useCustomCompetition, setUseCustomCompetition] = useState(false);
+
+  // Mock competitions; could be loaded by API in the future.
+  const competitions = useMemo(() => ([
+    { id: 'weekly-unexpected-kindness', name: 'Weekly: Unexpected Kindness' },
+    { id: 'one-room-story', name: 'Weekly: One Room Story' },
+    { id: 'staff-picks', name: 'Curated: Staff Picks' },
+    { id: 'festival-spring', name: 'Festival: Spring Shorts' },
+  ]), []);
 
   const refresh = async () => {
     try {
@@ -37,17 +51,37 @@ export default function Upload() {
   const onSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    // Validation: require a competition selection
+    const compChosen = useCustomCompetition
+      ? (competitionName && competitionName.trim().length > 0)
+      : (competitionId && competitionId.trim().length > 0);
+
+    if (!compChosen) {
+      setError('Please select a competition or enter a custom competition name.');
+      return;
+    }
     if (!file && !title) {
       setError('Please select a file or provide a title.');
       return;
     }
+
     try {
       setSubmitting(true);
-      await uploadVideo({ file, title, description });
+      await uploadVideo({
+        file,
+        title,
+        description,
+        competitionId: useCustomCompetition ? undefined : competitionId,
+        competitionName: useCustomCompetition ? competitionName : (competitions.find(c => c.id === competitionId)?.name || ''),
+      });
       // clear form and refresh
       setFile(null);
       setTitle('');
       setDescription('');
+      setCompetitionId('');
+      setCompetitionName('');
+      setUseCustomCompetition(false);
       await refresh();
     } catch (e) {
       setError(e.message || 'Upload failed');
@@ -87,7 +121,9 @@ export default function Upload() {
               aria-label="Title"
             />
           </div>
+
           <div style={{ height: 10 }} />
+
           <textarea
             className="input"
             placeholder="Description (optional)"
@@ -97,6 +133,67 @@ export default function Upload() {
             aria-label="Description"
             style={{ width: '100%', resize: 'vertical' }}
           />
+
+          <div style={{ height: 10 }} />
+
+          <div className="card section" style={{ background: '#fffefd' }}>
+            <strong>Competition</strong>
+            <div style={{ height: 8 }} />
+            <div className="row" role="group" aria-label="Competition selection mode">
+              <label className="pill" style={{ cursor: 'pointer' }}>
+                <input
+                  type="radio"
+                  name="comp-mode"
+                  checked={!useCustomCompetition}
+                  onChange={() => setUseCustomCompetition(false)}
+                  style={{ marginRight: 8 }}
+                />
+                Choose from list
+              </label>
+              <label className="pill" style={{ cursor: 'pointer' }}>
+                <input
+                  type="radio"
+                  name="comp-mode"
+                  checked={useCustomCompetition}
+                  onChange={() => setUseCustomCompetition(true)}
+                  style={{ marginRight: 8 }}
+                />
+                Enter custom
+              </label>
+            </div>
+            <div style={{ height: 8 }} />
+
+            {!useCustomCompetition ? (
+              <div className="row">
+                <select
+                  className="input"
+                  value={competitionId}
+                  onChange={(e) => setCompetitionId(e.target.value)}
+                  aria-label="Select competition"
+                >
+                  <option value="">Select a competition...</option>
+                  {competitions.map(c => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
+            ) : (
+              <div className="row">
+                <input
+                  className="input"
+                  placeholder="Enter competition name"
+                  value={competitionName}
+                  onChange={(e) => setCompetitionName(e.target.value)}
+                  aria-label="Competition name"
+                />
+              </div>
+            )}
+            <div style={{ height: 6 }} />
+            <div className="muted" style={{ fontSize: 12 }}>
+              Your selection will be sent as competitionId/competitionName with the upload.
+            </div>
+          </div>
+
           <div style={{ height: 10 }} />
           <div className="row">
             <button className="btn" type="submit" disabled={submitting}>
