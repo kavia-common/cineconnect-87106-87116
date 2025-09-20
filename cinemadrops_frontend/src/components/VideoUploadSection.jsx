@@ -3,16 +3,17 @@ import React, { useMemo, useRef, useState } from 'react';
 /**
  * PUBLIC_INTERFACE
  * VideoUploadSection renders a playful UI form for uploading a short film video with
- * metadata fields: name, author, genre (toggle), and rating. It manages local state
+ * metadata fields: name, author, genre (toggle), and age category. It manages local state
  * only and does not perform any backend calls.
  */
 export default function VideoUploadSection() {
   const genreOptions = useMemo(() => ['Drama', 'Comedy', 'Documentary', 'Sci‑Fi', 'Animation'], []);
+  const ageOptions = useMemo(() => ['All Ages', '7+', '13+', '16+', '18+'], []);
   const [file, setFile] = useState(null);
   const [name, setName] = useState('');
   const [author, setAuthor] = useState('');
   const [genre, setGenre] = useState(genreOptions[0]);
-  const [rating, setRating] = useState(3);
+  const [ageCategory, setAgeCategory] = useState(ageOptions[0]);
   const [previewUrl, setPreviewUrl] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const inputRef = useRef(null);
@@ -44,7 +45,7 @@ export default function VideoUploadSection() {
     setName('');
     setAuthor('');
     setGenre(genreOptions[0]);
-    setRating(3);
+    setAgeCategory(ageOptions[0]);
     setSubmitted(false);
     inputRef.current && (inputRef.current.value = '');
   };
@@ -55,7 +56,7 @@ export default function VideoUploadSection() {
     setSubmitted(true);
   };
 
-  const isValid = file && name.trim() && author.trim() && genre;
+  const isValid = file && name.trim() && author.trim() && genre && ageCategory;
 
   return (
     <div className="card section" aria-label="Upload a new video">
@@ -192,27 +193,28 @@ export default function VideoUploadSection() {
 
             <div>
               <label className="muted" style={{ fontSize: 13 }}>
-                Rating
+                Age Category (audience)
               </label>
-              <div className="row" style={{ alignItems: 'center' }}>
-                <input
-                  type="range"
-                  min={1}
-                  max={5}
-                  step={1}
-                  value={rating}
+              <div className="row" style={{ alignItems: 'center', gap: 8 }}>
+                <select
+                  className="input"
+                  aria-label="Select age category"
+                  value={ageCategory}
                   onChange={(e) => {
                     setSubmitted(false);
-                    setRating(parseInt(e.target.value, 10));
+                    setAgeCategory(e.target.value);
                   }}
-                  aria-label="Rating from 1 to 5"
-                  style={{ flex: 1 }}
-                />
-                <div className="pill" aria-label={`Current rating: ${rating} stars`}>
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <span key={i} aria-hidden="true">{i < rating ? '★' : '☆'}</span>
+                >
+                  {ageOptions.map(opt => (
+                    <option key={opt} value={opt}>{opt}</option>
                   ))}
-                </div>
+                </select>
+                <span className="pill" aria-live="polite" style={{ whiteSpace: 'nowrap' }}>
+                  Suitable for: {ageCategory}
+                </span>
+              </div>
+              <div className="muted" style={{ fontSize: 12, marginTop: 6 }}>
+                Pick who this video is appropriate for (e.g., All Ages, 13+).
               </div>
             </div>
 
