@@ -21,6 +21,7 @@ export default function TopNav({ onOpenChat, onOpenNotifications, onOpenQuick })
           <NavLink to="/curated" className="pill">Curated</NavLink>
           <NavLink to="/challenges" className="pill">Challenges</NavLink>
           <NavLink to="/forums" className="pill">Forums</NavLink>
+          <NavLink to="/upload" className="pill">Upload</NavLink>
         </nav>
         <div className="space" />
         <button className="btn secondary" onClick={onOpenQuick} aria-label="Quick actions">⚡ Quick</button>

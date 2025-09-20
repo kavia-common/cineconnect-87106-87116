@@ -61,5 +61,15 @@ Layout:
 ## Environment Variables
 - REACT_APP_API_BASE — Base URL for REST (required)
 - REACT_APP_WS_BASE — Base URL for WebSockets (required)
+- REACT_APP_AWS_API_BASE — Base URL for AWS API Gateway used for video upload and retrieval (required for Upload page)
 
 Do not commit real secrets; use `.env` locally and deployment env vars in production.
+
+### AWS API Integration
+Set `REACT_APP_AWS_API_BASE` to your API Gateway base URL, for example:
+`https://7r49ns3v2i.execute-api.us-east-2.amazonaws.com/prod`
+
+New Upload page at `/upload` uses these endpoints:
+- GET /resources/VIDEOS (list videos)
+- GET /resources/VIDEOS/{videoKey+} (single video by key; used internally if needed)
+- POST /resources/UPLOAD (upload video via multipart/form-data)
