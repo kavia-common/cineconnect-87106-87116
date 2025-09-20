@@ -130,25 +130,58 @@ img { max-width: 100%; display: block; }
 .film-grid {
   display: grid;
   grid-template-columns: repeat(12, 1fr);
-  gap: 16px;
+  gap: 18px;
 }
-@media (max-width: 1100px) {
-  .film-grid { grid-template-columns: repeat(6, 1fr); }
-}
-@media (max-width: 700px) {
-  .film-grid { grid-template-columns: repeat(2, 1fr); }
+/* On large screens show bigger cards by spanning more columns */
+.film-card { 
+  grid-column: span 4; /* was 3 -> bigger card footprint */
+  overflow: hidden; 
+  display: flex; 
+  flex-direction: column; 
+  border-radius: calc(var(--cd-radius) + 2px);
 }
 
-/* Film card */
-.film-card { grid-column: span 3; overflow: hidden; display: flex; flex-direction: column; }
-.film-thumb { aspect-ratio: 16/9; background: #eef6f7; position: relative; }
-.film-thumb .badge {
-  position: absolute; top: 10px; left: 10px; padding: 6px 10px; font-size: 12px; border-radius: 999px;
-  background: rgba(255,255,255,.9); color: #333; border: 1px solid var(--cd-border);
+/* Thumbnail: increase visual height for better visibility on wide screens */
+.film-thumb { 
+  aspect-ratio: 4/3; /* was 16/9 -> taller to showcase thumbnail */
+  background: #eef6f7; 
+  position: relative; 
+  border-bottom: 1px solid var(--cd-border);
 }
-.film-meta { padding: 12px; display: grid; gap: 6px; }
-.film-title { font-weight: 800; }
+.film-thumb .badge {
+  position: absolute; top: 12px; left: 12px; padding: 8px 12px; font-size: 12px; border-radius: 999px;
+  background: rgba(255,255,255,.92); color: #333; border: 1px solid var(--cd-border);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.06);
+}
+
+/* Meta spacing slightly increased to balance larger thumbnail */
+.film-meta { padding: 14px; display: grid; gap: 8px; }
+.film-title { font-weight: 800; font-size: 1.02rem; }
 .film-author { color: var(--cd-muted); font-size: 13px; }
+
+@media (max-width: 1280px) {
+  /* Slightly denser grid on medium-large screens */
+  .film-grid { grid-template-columns: repeat(8, 1fr); }
+  .film-card { grid-column: span 4; } /* 2 cards per row */
+}
+
+@media (max-width: 1100px) {
+  .film-grid { grid-template-columns: repeat(6, 1fr); }
+  .film-card { grid-column: span 3; } /* 2 cards per row on tablets */
+}
+
+@media (max-width: 900px) {
+  .film-grid { grid-template-columns: repeat(4, 1fr); }
+  .film-card { grid-column: span 4; } /* single card per row for clarity */
+  /* Make the aspect closer to 16:9 on narrow screens to save space */
+  .film-thumb { aspect-ratio: 16/9; }
+}
+
+@media (max-width: 700px) {
+  .film-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+  .film-card { grid-column: span 2; }
+  .film-meta { padding: 12px; gap: 6px; }
+}
 
 /* Rightbar */
 .rightbar { display: flex; flex-direction: column; gap: 16px; }
