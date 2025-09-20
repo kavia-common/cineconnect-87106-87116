@@ -16,8 +16,8 @@ export default function QuickActionsDrawer({ open, onClose }) {
         <div className="row" style={{ gap: 10, flexWrap: 'wrap' }}>
           <Link className="btn" to="/challenges" onClick={onClose}>⚡ Join Challenge</Link>
           <Link className="btn secondary" to="/curated" onClick={onClose}>🌟 Staff Picks</Link>
-          <button className="btn">⬆️ Upload Short</button>
-          <button className="btn">📝 Write Script</button>
+          <Link className="btn" to="/upload" onClick={onClose}>⬆️ Upload Short</Link>
+          {/* Write Script option intentionally removed per requirements */}
         </div>
       </div>
     </div>

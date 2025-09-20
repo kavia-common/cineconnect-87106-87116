@@ -5,7 +5,7 @@ import { useReactions } from '../services/Reactions';
 /**
  * PUBLIC_INTERFACE
  * Upload page: allows uploading new videos via AWS API Gateway and lists available videos from the same API.
- * Adds competition selection; selected competition is sent along with the upload payload.
+ * Competition/Challenge selection is optional.
  */
 export default function Upload() {
   const [file, setFile] = useState(null);
@@ -16,7 +16,7 @@ export default function Upload() {
   const [videos, setVideos] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
 
-  // Competition state
+  // Competition state (optional)
   const [competitionId, setCompetitionId] = useState('');
   const [competitionName, setCompetitionName] = useState('');
   const [useCustomCompetition, setUseCustomCompetition] = useState(false);
@@ -52,15 +52,7 @@ export default function Upload() {
     e.preventDefault();
     setError('');
 
-    // Validation: require a competition selection
-    const compChosen = useCustomCompetition
-      ? (competitionName && competitionName.trim().length > 0)
-      : (competitionId && competitionId.trim().length > 0);
-
-    if (!compChosen) {
-      setError('Please select a competition or enter a custom competition name.');
-      return;
-    }
+    // Validation: competition is optional; validate only file or title presence
     if (!file && !title) {
       setError('Please select a file or provide a title.');
       return;
@@ -72,6 +64,7 @@ export default function Upload() {
         file,
         title,
         description,
+        // Only include competition info if provided; service ignores empty values
         competitionId: useCustomCompetition ? undefined : competitionId,
         competitionName: useCustomCompetition ? competitionName : (competitions.find(c => c.id === competitionId)?.name || ''),
       });
@@ -137,7 +130,7 @@ export default function Upload() {
           <div style={{ height: 10 }} />
 
           <div className="card section" style={{ background: '#fffefd' }}>
-            <strong>Competition</strong>
+            <strong>Competition (optional)</strong>
             <div style={{ height: 8 }} />
             <div className="row" role="group" aria-label="Competition selection mode">
               <label className="pill" style={{ cursor: 'pointer' }}>
@@ -171,7 +164,7 @@ export default function Upload() {
                   onChange={(e) => setCompetitionId(e.target.value)}
                   aria-label="Select competition"
                 >
-                  <option value="">Select a competition...</option>
+                  <option value="">No competition</option>
                   {competitions.map(c => (
                     <option key={c.id} value={c.id}>{c.name}</option>
                   ))}
@@ -181,7 +174,7 @@ export default function Upload() {
               <div className="row">
                 <input
                   className="input"
-                  placeholder="Enter competition name"
+                  placeholder="Enter competition name (leave blank for none)"
                   value={competitionName}
                   onChange={(e) => setCompetitionName(e.target.value)}
                   aria-label="Competition name"
@@ -190,7 +183,7 @@ export default function Upload() {
             )}
             <div style={{ height: 6 }} />
             <div className="muted" style={{ fontSize: 12 }}>
-              Your selection will be sent as competitionId/competitionName with the upload.
+              You can upload without associating a competition. If provided, we will include competitionId/competitionName.
             </div>
           </div>
 

@@ -52,13 +52,14 @@ export async function getVideoByKey(videoKey) {
 
 /**
  * PUBLIC_INTERFACE
- * uploadVideo now accepts optional competition info and includes it in the payload.
+ * uploadVideo accepts optional competition info and includes it only if provided.
  */
 export async function uploadVideo({ file, title, description, competitionId, competitionName }) {
   /**
    * Upload a video using POST endpoint.
    * If backend expects multipart/form-data, we send FormData with file and metadata.
    * Falls back to JSON if file is not provided.
+   * Note: competitionId and competitionName are optional and omitted if empty/undefined.
    */
   const url = `${BASE}/resources/UPLOAD`;
 
@@ -86,7 +87,9 @@ export async function uploadVideo({ file, title, description, competitionId, com
     const ct = res.headers.get('content-type') || '';
     return ct.includes('application/json') ? res.json() : res.text();
   } else {
-    const payload = { title, description };
+    const payload = {};
+    if (title) payload.title = title;
+    if (description) payload.description = description;
     addCompetitionToJson(payload);
     const res = await fetch(url, {
       method: 'POST',
