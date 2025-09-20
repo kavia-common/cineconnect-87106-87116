@@ -8,19 +8,29 @@ import { getAnalytics, isSupported as isAnalyticsSupported } from 'firebase/anal
 import { getFirestore } from 'firebase/firestore';
 
 /**
- * Firebase configuration for Cinemadrops.
- * Note: storageBucket corrected to include the proper domain.
- * If you prefer using environment variables, you can swap these with REACT_APP_*
- * values from your .env file.
+ * Firebase configuration for Cinemadrops loaded from environment variables.
+ * For React apps, env vars must be prefixed with REACT_APP_ to be exposed at build time.
+ *
+ * Required .env variables:
+ * - REACT_APP_FIREBASE_API_KEY
+ * - REACT_APP_FIREBASE_AUTH_DOMAIN
+ * - REACT_APP_FIREBASE_PROJECT_ID
+ * - REACT_APP_FIREBASE_STORAGE_BUCKET
+ * - REACT_APP_FIREBASE_MESSAGING_SENDER_ID
+ * - REACT_APP_FIREBASE_APP_ID
+ * - REACT_APP_FIREBASE_MEASUREMENT_ID (optional for Analytics)
+ *
+ * Do not commit real secrets. Provide them via environment or a local .env file.
  */
 const firebaseConfig = {
-  apiKey: 'AIzaSyAVi65m_QztkCkWZjNsV86GZ_PANfeFtyQ',
-  authDomain: 'cinemadrops-e1127.firebaseapp.com',
-  projectId: 'cinemadrops-e1127',
-  storageBucket: 'cinemadrops-e1127.appspot.com',
-  messagingSenderId: '506755432338',
-  appId: '1:506755432338:web:2244572cdea6dfd9784b4b',
-  measurementId: 'G-6MSWY7EVM7',
+  apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
+  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.REACT_APP_FIREBASE_APP_ID,
+  // measurementId is optional; Analytics will only initialize if both supported and provided
+  measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID,
 };
 
 // Initialize Firebase App (singleton)
@@ -34,7 +44,7 @@ export const db = getFirestore(app);
 export { app };
 
 /**
- * Optionally export Analytics if supported (in browser contexts).
+ * Optionally export Analytics if supported (in browser contexts) and a measurementId is provided.
  * Some test and SSR environments may not support Analytics; we guard accordingly.
  */
 export let analytics = null;
@@ -42,7 +52,8 @@ export let analytics = null;
   try {
     // Only try analytics in real browser environment
     const isBrowser = typeof window !== 'undefined' && typeof document !== 'undefined';
-    if (isBrowser && (await isAnalyticsSupported())) {
+    const hasMeasurementId = !!process.env.REACT_APP_FIREBASE_MEASUREMENT_ID;
+    if (isBrowser && hasMeasurementId && (await isAnalyticsSupported())) {
       analytics = getAnalytics(app);
     }
   } catch {
