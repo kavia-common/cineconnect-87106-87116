@@ -30,6 +30,11 @@ export default function VideoUploadForm({ onSuccess }) {
   const [categories, setCategories] = useState(''); // comma-separated
   const [rated, setRated] = useState('');
 
+  // Reaction counts (optional, defaults handled by backend)
+  const [likes] = useState(0);
+  const [dislikes] = useState(0);
+  const [loves] = useState(0);
+
   // Save status flags
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
@@ -55,27 +60,27 @@ export default function VideoUploadForm({ onSuccess }) {
         .map(c => c.trim())
         .filter(Boolean);
 
-      // Backend expects: { videoUrl, name, creator, categories, rated, dislikes?, likes?, loves? }
+      // Construct payload matching backend API: { videoUrl, name, creator, categories, rated, likes, dislikes, loves }
       const payload = {
         videoUrl,
         name: name.trim(),
         creator: creator.trim(),
         categories: cats,
         rated: rated.trim(),
-        // Counters are optional; backend defaults to 0, but we can be explicit if desired:
-        dislikes: 0,
-        likes: 0,
-        loves: 0,
-        // Optional upload metadata for informational purposes
-        uploadMeta,
+        likes,
+        dislikes,
+        loves,
       };
 
+      // Note: Api.js prefixes base URL using REACT_APP_API_BASE. Do not hard-code full URL here.
       const created = await post('/videos', payload);
+
       setSaveSuccess(true);
       if (typeof onSuccess === 'function') {
         onSuccess(created);
       }
     } catch (e) {
+      // Provide readable feedback
       setSaveError(e?.message || 'Failed to save metadata.');
     } finally {
       setSaving(false);
