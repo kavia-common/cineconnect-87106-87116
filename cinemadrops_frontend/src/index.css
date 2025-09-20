@@ -160,3 +160,31 @@ img { max-width: 100%; display: block; }
   width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--cd-border); background: #fff;
 }
 .badge { padding: 4px 8px; border-radius: 8px; background: #f2fafb; color: #0f6c77; font-weight: 700; font-size: 12px; border: 1px solid #d8eef0; }
+
+/* Reactions */
+.reactions-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+.reaction-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--cd-border);
+  background: #fff;
+  cursor: pointer;
+  font-weight: 700;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.04);
+  transition: transform .12s ease, box-shadow .2s ease, border-color .2s ease, color .2s ease, background .2s ease;
+}
+.reaction-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(0,0,0,0.06); }
+.reaction-btn.active {
+  background: #fff7f1;
+}
+.reaction-btn .reaction-label {
+  font-size: 12px;
+}

@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { listVideos, uploadVideo } from '../services/AwsVideos';
+import { useReactions } from '../services/Reactions';
 
 /**
  * PUBLIC_INTERFACE
@@ -54,6 +55,14 @@ export default function Upload() {
       setSubmitting(false);
     }
   };
+
+  const { getReaction, setReaction } = useReactions();
+  const options = useMemo(() => ([
+    { key: 'dislike', label: 'Dislike', icon: '👎', color: 'var(--cd-error)' },
+    { key: 'like', label: 'Like', icon: '👍', color: 'var(--cd-primary)' },
+    { key: 'love', label: 'Love', icon: '❤️', color: '#e83e8c' },
+    { key: 'life changing', label: 'Life Changing', icon: '🌟', color: 'var(--cd-secondary)' },
+  ]), []);
 
   return (
     <div className="page-upload">
@@ -114,6 +123,13 @@ export default function Upload() {
             const author = v.author || v.owner || 'Anonymous';
             const likes = v.likes || v.stars || 0;
             const duration = v.duration || v.length || 0;
+            const current = getReaction(id);
+
+            const clickReact = (key) => {
+              const next = current === key ? null : key;
+              setReaction(id, next);
+            };
+
             return (
               <div key={id} className="card film-card" style={{ textDecoration: 'none' }}>
                 <div className="film-thumb">
@@ -123,6 +139,30 @@ export default function Upload() {
                 <div className="film-meta">
                   <div className="film-title">{title}</div>
                   <div className="film-author">by {author}</div>
+                  <div style={{ height: 8 }} />
+                  <div className="reactions-row" role="group" aria-label={`React to ${title}`}>
+                    {options.map(opt => {
+                      const active = current === opt.key;
+                      return (
+                        <button
+                          key={opt.key}
+                          className={`reaction-btn ${active ? 'active' : ''}`}
+                          onClick={() => clickReact(opt.key)}
+                          aria-pressed={active}
+                          aria-label={`${opt.label}${active ? ' (selected)' : ''}`}
+                          title={opt.label}
+                          style={{
+                            borderColor: active ? opt.color : 'var(--cd-border)',
+                            color: active ? opt.color : 'inherit'
+                          }}
+                          type="button"
+                        >
+                          <span style={{ fontSize: 14 }}>{opt.icon}</span>
+                          <span className="reaction-label">{opt.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             );

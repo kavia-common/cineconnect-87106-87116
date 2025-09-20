@@ -7,6 +7,7 @@ Cinemadrops is a playful, community-driven platform for short films. This fronte
 - Comments and forums
 - Weekly challenges
 - Live chat and real-time notifications via WebSockets
+- Reactions on videos (Dislike, Like, Love, Life Changing)
 - Responsive multi-column layout with top navigation, sidebars, and modal drawers
 
 ## Tech
@@ -38,10 +39,20 @@ Note: This UI expects a REST API and WebSocket server. If none is available, dem
 ## Project Structure
 - src/services/Api.js — API helpers and SWR
 - src/services/Socket.js — WebSocket provider
+- src/services/Reactions.js — Reaction helpers using localStorage (with optional POST to backend if available)
 - src/components/* — Reusable UI components (TopNav, Sidebars, FilmCard, Comments)
 - src/pages/* — Route pages (Home, FilmDetails, CreatorProfile, Forums, Challenges, Curated)
 - src/drawers/* — Chat, Notifications, Quick Actions
 - src/index.css — Playful theme styles per style guide
+
+## Reactions
+- Types: "dislike", "like", "love", "life changing"
+- Persistence: client-side via localStorage under key `cd_reactions`
+- Public hooks:
+  - useReactions(): { map, getReaction(videoId), setReaction(videoId, reactionOrNull) }
+- Backend integration (optional):
+  - If your backend supports it, implement POST `/films/:id/reactions` to record reaction.
+  - The UI already attempts to POST; failures are ignored and state remains local.
 
 ## Style Guide
 Colors (from styleThemeData):
