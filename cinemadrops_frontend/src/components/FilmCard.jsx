@@ -52,8 +52,8 @@ export default function FilmCard({ film }) {
                 }}
                 type="button"
               >
-                <span style={{ fontSize: 14 }}>{opt.icon}</span>
-                <span className="reaction-label">{opt.label}</span>
+                <span className="reaction-icon" aria-hidden="true">{opt.icon}</span>
+                <span className="reaction-label" role="tooltip">{opt.label}</span>
               </button>
             );
           })}

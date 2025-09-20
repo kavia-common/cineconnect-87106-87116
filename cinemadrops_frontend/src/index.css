@@ -181,10 +181,9 @@ img { max-width: 100%; display: block; }
 }
 .reaction-btn {
   position: relative;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 10px;
+  display: inline-grid; /* grid allows stacking icon and tooltip without layout shift */
+  place-items: center;
+  padding: 8px; /* icon-only base hit area */
   border-radius: 999px;
   border: 1px solid var(--cd-border);
   background: #fff;
@@ -192,6 +191,12 @@ img { max-width: 100%; display: block; }
   font-weight: 700;
   box-shadow: 0 4px 10px rgba(0,0,0,0.04);
   transition: transform .12s ease, box-shadow .2s ease, border-color .2s ease, color .2s ease, background .2s ease;
+  min-width: 36px;
+  min-height: 36px; /* comfortable tap target */
+}
+.reaction-btn > .reaction-icon {
+  font-size: 14px;
+  line-height: 1;
 }
 .reaction-btn:hover { 
   transform: translateY(-1px); 
@@ -206,26 +211,59 @@ img { max-width: 100%; display: block; }
   background: #fff7f1;
 }
 
-/* Hide labels by default, reveal on hover/focus for playful, discoverable UI */
+/* Tooltip label: positioned absolutely to avoid layout shift */
 .reaction-btn .reaction-label {
-  font-size: 12px;
-  opacity: 0;
-  max-width: 0;
-  transform: translateX(-2px);
+  position: absolute;
+  bottom: calc(100% + 8px); /* above the button by default */
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
   white-space: nowrap;
-  overflow: hidden;
-  transition: opacity .15s ease, max-width .2s ease, transform .15s ease;
+  background: #ffffff;
+  color: var(--cd-text);
+  border: 1px solid var(--cd-border);
+  border-radius: 10px;
+  padding: 6px 10px;
+  font-size: 12px;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+  opacity: 0;
   pointer-events: none;
+  transition: opacity .15s ease, transform .15s ease;
+  z-index: 2;
 }
+
+/* Playful arrow for tooltip */
+.reaction-btn .reaction-label::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 6px;
+  border-style: solid;
+  border-color: #ffffff transparent transparent transparent;
+  filter: drop-shadow(0 -1px 0 var(--cd-border));
+}
+
+/* Show tooltip on hover and focus (keyboard accessible) */
 .reaction-btn:hover .reaction-label,
 .reaction-btn:focus-visible .reaction-label {
   opacity: 1;
-  max-width: 120px; /* enough to show 'Life Changing' */
-  transform: translateX(0);
-  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
 }
 
 /* Slight color pop on hover to fit vibrant theme */
 .reaction-btn:hover {
   border-color: rgba(15, 163, 177, 0.35);
+}
+
+/* In case of small viewports near top edge, allow alternative placement below (opt-in via modifier) */
+.reaction-btn.tooltip-bottom .reaction-label {
+  top: calc(100% + 8px);
+  bottom: auto;
+}
+.reaction-btn.tooltip-bottom .reaction-label::after {
+  top: auto;
+  bottom: 100%;
+  border-color: transparent transparent #ffffff transparent;
+  filter: drop-shadow(0 1px 0 var(--cd-border));
 }
