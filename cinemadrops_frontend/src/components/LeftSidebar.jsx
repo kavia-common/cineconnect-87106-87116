@@ -2,19 +2,15 @@ import React from 'react';
 
 /**
  * PUBLIC_INTERFACE
- * LeftSidebar now focuses on auxiliary content (filters moved to main content).
+ * LeftSidebar is currently minimal; previous "Browse" shortcuts were removed.
  */
 export default function LeftSidebar() {
   return (
     <>
+      {/* Sidebar intentionally minimal after removing 'Browse' */}
       <div className="card section">
-        <strong>Browse</strong>
-        <div style={{ height: 8 }} />
-        <div className="row" style={{ flexWrap: 'wrap' }}>
-          <span className="pill" style={{ margin: 4 }}>Genres</span>
-          <span className="pill" style={{ margin: 4 }}>Staff Picks</span>
-          <span className="pill" style={{ margin: 4 }}>Awarded</span>
-          <span className="pill" style={{ margin: 4 }}>Indie</span>
+        <div className="muted" style={{ fontSize: 14 }}>
+          Sidebar
         </div>
       </div>
     </>

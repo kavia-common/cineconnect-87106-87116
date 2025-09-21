@@ -2,10 +2,11 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import LeftSidebar from '../../components/LeftSidebar';
 
-test('LeftSidebar no longer shows Filters; focuses on browse shortcuts', () => {
+test('LeftSidebar renders without Browse section', () => {
   render(<LeftSidebar />);
-  expect(screen.getByText(/Browse/i)).toBeInTheDocument();
-  expect(screen.getByText(/Genres/i)).toBeInTheDocument();
-  // Filters should not be here anymore
-  expect(screen.queryByText(/Filters/i)).not.toBeInTheDocument();
+  // "Browse" and its items should not be present anymore
+  expect(screen.queryByText(/Browse/i)).not.toBeInTheDocument();
+  expect(screen.queryByText(/Genres/i)).not.toBeInTheDocument();
+  // Minimal placeholder present
+  expect(screen.getByText(/Sidebar/i)).toBeInTheDocument();
 });
