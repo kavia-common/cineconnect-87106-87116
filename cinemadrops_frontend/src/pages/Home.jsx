@@ -47,6 +47,9 @@ export default function Home() {
 }
 
 const demoFilms = [
+  // Para que las portadas se muestren desde /assets sin API:
+  // coloca imágenes en public/assets con nombres basados en el título (slug):
+  // e.g., /public/assets/paper-boats.jpg, /public/assets/under-neon.jpg
   { id: '1', title: 'Paper Boats', author: 'Liu Chen', likes: 312, duration: 7 },
   { id: '2', title: 'Under Neon', author: 'Samir Khan', likes: 922, duration: 12 },
   { id: '3', title: 'Glass Orchard', author: 'Ivy Gomez', likes: 154, duration: 5 },

@@ -37,6 +37,7 @@ Abre http://localhost:3000
 - src/components/* — Componentes reutilizables (TopNav, Sidebars, FilmCard, Comments)
 - src/pages/* — Páginas de rutas (Home, FilmDetails, CreatorProfile, Forums, Challenges, Curated)
 - src/index.css — Estilos del tema
+- public/assets — Imágenes estáticas usadas como portadas/miniaturas. Referenciadas como `/assets/<slug>.jpg|png|webp`.
 
 Se han removido:
 - src/drawers/* — Chat, Notificaciones, Quick Actions
