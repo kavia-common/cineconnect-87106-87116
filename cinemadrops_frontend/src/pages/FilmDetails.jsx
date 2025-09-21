@@ -261,6 +261,10 @@ export default function FilmDetails() {
   // DEBUG STATE for video fetch play error
   const [playErrorDebug, setPlayErrorDebug] = useState(null); // { message, status, statusText, url, responseText? }
 
+  // DEBUG: Detailed response panel state for Play request (non-blocking UI)
+  // To remove later, search for "DEBUG PANEL (Play)" and delete this state + corresponding JSX
+  const [playDebugInfo, setPlayDebugInfo] = useState(null);
+
   // PUBLIC_INTERFACE
   async function handlePlay() {
     /**
@@ -279,15 +283,48 @@ export default function FilmDetails() {
     setPlayError('');
     setPlayErrorDebug(null);
     setVideoSrc('');
+    // DEBUG: reset debug info panel
+    setPlayDebugInfo(null);
+
     try {
       const base = (process.env.REACT_APP_API_BASE_URL || process.env.REACT_APP_API_BASE || 'https://s4myuxoa90.execute-api.us-east-2.amazonaws.com/devops').replace(/\/$/, '');
       const endpoint = `${base}/videos_shortfilms/${encodeURIComponent(slug)}?include_content=true`;
       const res = await fetch(endpoint, { method: 'GET' });
 
+      // Collect headers into plain object for visibility
+      const headersObj = {};
+      try {
+        res.headers?.forEach?.((v, k) => { headersObj[k] = v; });
+      } catch {
+        // ignore if headers can't be iterated
+      }
+
+      // Prepare a function to finalize the debug payload and log
+      const finalizeDebug = ({ rawBodyText, parsedBody, chosenSrc }) => {
+        const debugPayload = {
+          // Core HTTP
+          status: res.status,
+          statusText: res.statusText,
+          url: endpoint,
+          headers: headersObj,
+          // Raw body and parsed JSON (if any)
+          raw: rawBodyText,
+          json: parsedBody,
+          // The exact value used as <video src>
+          chosenSrc,
+        };
+        // DEBUG: full console dump (raw + headers + parsed)
+        // eslint-disable-next-line no-console
+        console.log('[FilmDetails][Play][Response Debug]', debugPayload);
+        setPlayDebugInfo(debugPayload);
+      };
+
       if (!res.ok) {
         // DEBUG: capture raw response for console + UI
         let responseText = '';
         try { responseText = await res.text(); } catch { /* ignore */ }
+        finalizeDebug({ rawBodyText: responseText, parsedBody: tryParseJson(responseText), chosenSrc: null });
+
         const errObj = {
           message: `HTTP ${res.status} ${res.statusText}`,
           status: res.status,
@@ -303,9 +340,23 @@ export default function FilmDetails() {
 
       const contentType = res.headers.get('content-type') || '';
 
+      let chosenSrc = null;
+      let rawBodyTextForDebug = '';
+      let parsedBodyForDebug = undefined;
+
       // Try JSON first (common for API Gateway)
       if (contentType.includes('application/json')) {
-        const body = await res.json();
+        // Read as text once so we can show raw, then parse
+        const text = await res.text();
+        rawBodyTextForDebug = text;
+        let body;
+        try {
+          body = JSON.parse(text);
+          parsedBodyForDebug = body;
+        } catch {
+          body = { raw: text };
+          parsedBodyForDebug = undefined;
+        }
 
         // normalize common fields that might carry the playable url
         const url =
@@ -334,56 +385,78 @@ export default function FilmDetails() {
           'video/mp4';
 
         if (url) {
+          chosenSrc = url;
           setVideoSrc(url);
         } else if (base64) {
           // Ensure we prepend data URI header
           const dataUri = base64.startsWith('data:')
             ? base64
             : `data:${contentTypeFromBody};base64,${base64}`;
+          chosenSrc = dataUri;
           setVideoSrc(dataUri);
         } else {
           // Fallback: if body is actually a string url
           if (typeof body === 'string' && /^https?:\/\//.test(body)) {
+            chosenSrc = body;
             setVideoSrc(body);
           } else {
+            finalizeDebug({ rawBodyText: rawBodyTextForDebug, parsedBody: parsedBodyForDebug, chosenSrc });
             throw new Error('API did not return a playable URL or base64 content.');
           }
         }
+
+        // Store debug info after choosing src
+        finalizeDebug({ rawBodyText: rawBodyTextForDebug, parsedBody: parsedBodyForDebug, chosenSrc });
       } else {
         // If API returns raw text, try to parse or treat as URL
         const text = await res.text();
+        rawBodyTextForDebug = text;
+
         try {
           const body = JSON.parse(text);
+          parsedBodyForDebug = body;
+
           const url = body?.url || body?.signedUrl || body?.videoUrl || null;
           const base64 = body?.base64 || body?.content || null;
           const contentTypeFromBody = body?.content_type || 'video/mp4';
           if (url) {
+            chosenSrc = url;
             setVideoSrc(url);
           } else if (base64) {
             const dataUri = base64.startsWith('data:')
               ? base64
               : `data:${contentTypeFromBody};base64,${base64}`;
+            chosenSrc = dataUri;
             setVideoSrc(dataUri);
           } else if (typeof body === 'string' && /^https?:\/\//.test(body)) {
+            chosenSrc = body;
             setVideoSrc(body);
           } else {
             // Sometimes API can return a plain signed URL string (not JSON)
             if (/^https?:\/\//.test(text.trim())) {
-              setVideoSrc(text.trim());
+              chosenSrc = text.trim();
+              setVideoSrc(chosenSrc);
             } else {
+              finalizeDebug({ rawBodyText: rawBodyTextForDebug, parsedBody: parsedBodyForDebug, chosenSrc });
               throw new Error('Unrecognized response format for video content.');
             }
           }
         } catch {
-          // Raw text not JSON. If looks like URL, use it
+          // Raw text not JSON. If looks like URL or data:, use it
           if (/^https?:\/\//.test(text.trim())) {
-            setVideoSrc(text.trim());
+            chosenSrc = text.trim();
+            setVideoSrc(chosenSrc);
           } else if (text.startsWith('data:')) {
-            setVideoSrc(text.trim());
+            chosenSrc = text.trim();
+            setVideoSrc(chosenSrc);
           } else {
+            finalizeDebug({ rawBodyText: rawBodyTextForDebug, parsedBody: parsedBodyForDebug, chosenSrc });
             throw new Error('Unrecognized non-JSON response for video content.');
           }
         }
+
+        // Store debug info for non-JSON path
+        finalizeDebug({ rawBodyText: rawBodyTextForDebug, parsedBody: parsedBodyForDebug, chosenSrc });
       }
     } catch (err) {
       setPlayError(err?.message || 'Could not load the video.');
@@ -398,6 +471,11 @@ export default function FilmDetails() {
     } finally {
       setPlayLoading(false);
     }
+  }
+
+  // Helper: safe JSON parse for debug panel
+  function tryParseJson(text) {
+    try { return JSON.parse(text); } catch { return undefined; }
   }
 
   if (isLoading) {
@@ -592,6 +670,60 @@ export default function FilmDetails() {
                   <pre style={{ overflowX: 'auto' }}>{playErrorDebug.responseText}</pre>
                 </details>
               )}
+            </div>
+          )}
+
+          {/* DEBUG PANEL (Play): Visible response object - remove this block when debugging is done */}
+          {playDebugInfo && (
+            <div
+              className="card section"
+              style={{
+                marginTop: 10,
+                border: '1px dashed var(--cd-border)',
+                background: 'var(--cd-chip-bg)',
+                color: 'inherit',
+              }}
+              role="status"
+            >
+              <strong>Debug: Play API Response</strong>
+              <div style={{ height: 6 }} />
+              <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+                <span className="pill">HTTP: {String(playDebugInfo.status)} {playDebugInfo.statusText || ''}</span>
+                <span className="pill">URL</span>
+                <code style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>{playDebugInfo.url}</code>
+              </div>
+              <div style={{ height: 8 }} />
+              <details>
+                <summary>Headers</summary>
+                <pre style={{ overflowX: 'auto' }}>{JSON.stringify(playDebugInfo.headers || {}, null, 2)}</pre>
+              </details>
+              <details>
+                <summary>JSON (parsed if possible)</summary>
+                <pre style={{ overflowX: 'auto' }}>
+                  {(() => {
+                    try {
+                      return JSON.stringify(playDebugInfo.json, null, 2);
+                    } catch {
+                      return 'Could not stringify JSON body.';
+                    }
+                  })()}
+                </pre>
+              </details>
+              <details open>
+                <summary>Raw Body</summary>
+                <pre style={{ overflowX: 'auto', maxHeight: 260 }}>{String(playDebugInfo.raw || '')}</pre>
+              </details>
+              <div style={{ height: 8 }} />
+              <div>
+                <strong>Chosen video src:</strong>
+                <div className="pill" style={{ display: 'inline-flex', marginTop: 6 }}>
+                  {playDebugInfo.chosenSrc
+                    ? (playDebugInfo.chosenSrc.startsWith('data:')
+                        ? 'data:(base64 payload hidden)'
+                        : playDebugInfo.chosenSrc)
+                    : '—'}
+                </div>
+              </div>
             </div>
           )}
 
