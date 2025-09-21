@@ -118,7 +118,7 @@ export default function Profile() {
           </div>
           <div className="space" />
           <button className="btn" style={{ boxShadow: '0 8px 24px rgba(15,163,177,.35)' }}>
-            Editar perfil
+            Edit Profile
           </button>
         </div>
       </div>

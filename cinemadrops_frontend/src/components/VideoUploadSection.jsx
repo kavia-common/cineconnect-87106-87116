@@ -19,12 +19,12 @@ const API_ENDPOINT = 'https://s4myuxoa90.execute-api.us-east-2.amazonaws.com/dev
 
 /**
  * PUBLIC_INTERFACE
- * Componente de sección para subir y listar videos con portada.
- * - Formulario con nombre, género, autor/creador, archivo de video y portada opcional.
- * - Valida tipos/tamaño de archivos.
- * - Barra de progreso de carga.
- * - Consume endpoint AWS para subir (FormData) y listar.
- * - Lista videos con nombre, tamaño, fecha, enlace y la portada si existe.
+ * Section component to upload and list videos with cover image.
+ * - Form with name, genre, author/creator, video file and optional cover image.
+ * - Validates file types/sizes.
+ * - Shows upload progress bar.
+ * - Uses AWS endpoint to upload (FormData) and list.
+ * - Lists videos with name, size, date, link, and cover image if available.
  */
 export default function VideoUploadSection() {
   const [nombre, setNombre] = useState('');
@@ -106,14 +106,14 @@ export default function VideoUploadSection() {
     if (!ALLOWED_VIDEO_TYPES.includes(f.type)) {
       setMensaje({
         type: 'error',
-        text: 'Tipo de archivo no permitido. Sube un video MP4, WebM, OGG, MOV, AVI o MKV.'
+        text: 'Unsupported file type. Please upload MP4, WebM, OGG, MOV, AVI or MKV.'
       });
       return;
     }
     if (f.size > MAX_VIDEO_SIZE) {
       setMensaje({
         type: 'error',
-        text: 'El archivo supera el tamaño máximo permitido (100MB).'
+        text: 'The file exceeds the maximum allowed size (100MB).'
       });
       return;
     }
@@ -135,14 +135,14 @@ export default function VideoUploadSection() {
     if (!ALLOWED_IMAGE_TYPES.includes(f.type)) {
       setMensaje({
         type: 'error',
-        text: 'La portada debe ser una imagen JPG, PNG o WEBP.'
+        text: 'Cover image must be JPG, PNG or WEBP.'
       });
       return;
     }
     if (f.size > MAX_IMAGE_SIZE) {
       setMensaje({
         type: 'error',
-        text: 'La imagen de portada supera el máximo de 5MB.'
+        text: 'Cover image exceeds the maximum of 5MB.'
       });
       return;
     }
@@ -162,7 +162,7 @@ export default function VideoUploadSection() {
     if (!nombre.trim() || !autor.trim() || !file) {
       setMensaje({
         type: 'error',
-        text: 'Completa los campos requeridos y selecciona un archivo de video.'
+        text: 'Complete required fields and select a video file.'
       });
       return;
     }
@@ -211,7 +211,7 @@ export default function VideoUploadSection() {
       xhr.send(form);
       await done;
 
-      setMensaje({ type: 'success', text: '¡Video subido exitosamente!' });
+      setMensaje({ type: 'success', text: 'Video uploaded successfully!' });
       setNombre('');
       setAutor('');
       setGenero('Drama');
@@ -251,7 +251,7 @@ export default function VideoUploadSection() {
         setCargandoLista(false);
       }
     } catch (err) {
-      setMensaje({ type: 'error', text: `No se pudo subir el video. ${err?.message || ''}` });
+      setMensaje({ type: 'error', text: `Could not upload the video. ${err?.message || ''}` });
     } finally {
       setCargando(false);
     }
@@ -280,9 +280,9 @@ export default function VideoUploadSection() {
 
   return (
     <div className="card section" style={{ display: 'grid', gap: 12 }}>
-      <h2 style={{ margin: 0 }}>Subir Video</h2>
+      <h2 style={{ margin: 0 }}>Upload Video</h2>
       <p className="muted" style={{ marginTop: -6 }}>
-        Comparte tu corto con la comunidad. Tamaño máximo 100MB. Tipos: MP4, WebM, OGG, MOV, AVI, MKV.
+        Share your short with the community. Max size 100MB. Types: MP4, WebM, OGG, MOV, AVI, MKV.
       </p>
 
       {/* Mensajes de estado */}
@@ -303,16 +303,16 @@ export default function VideoUploadSection() {
       {/* Formulario */}
       <div className="row" style={{ flexWrap: 'wrap', gap: 12 }}>
         <div style={{ minWidth: 220, flex: 1 }}>
-          <label className="muted" style={{ fontSize: 13 }}>Nombre del video</label>
+          <label className="muted" style={{ fontSize: 13 }}>Video name</label>
           <input
             className="input"
-            placeholder="Ej. Amanecer en la ciudad"
+            placeholder="E.g. Sunrise in the City"
             value={nombre}
             onChange={(e) => setNombre(e.target.value)}
           />
         </div>
         <div style={{ minWidth: 180 }}>
-          <label className="muted" style={{ fontSize: 13 }}>Género</label>
+          <label className="muted" style={{ fontSize: 13 }}>Genre</label>
           <select className="input" value={genero} onChange={(e) => setGenero(e.target.value)}>
             {generos.map((g) => (
               <option key={g} value={g}>{g}</option>
@@ -320,10 +320,10 @@ export default function VideoUploadSection() {
           </select>
         </div>
         <div style={{ minWidth: 220, flex: 1 }}>
-          <label className="muted" style={{ fontSize: 13 }}>Autor / Creador</label>
+          <label className="muted" style={{ fontSize: 13 }}>Author / Creator</label>
           <input
             className="input"
-            placeholder="Tu nombre artístico"
+            placeholder="Your artist name"
             value={autor}
             onChange={(e) => setAutor(e.target.value)}
           />
@@ -347,16 +347,16 @@ export default function VideoUploadSection() {
           background: 'var(--cd-surface)',
           cursor: 'pointer'
         }}
-        aria-label="Área para arrastrar y soltar archivo de video"
+        aria-label="Drag & drop area for video file"
         role="button"
         tabIndex={0}
       >
         <div className="row" style={{ justifyContent: 'center' }}>
-          <span className="badge">Arrastra y suelta tu video aquí</span>
+          <span className="badge">Drag & drop your video here</span>
         </div>
         <div style={{ height: 8 }} />
         <div className="row" style={{ justifyContent: 'center' }}>
-          <span className="muted">o</span>
+          <span className="muted">or</span>
           <button
             type="button"
             className="btn secondary"
@@ -366,7 +366,7 @@ export default function VideoUploadSection() {
               inputRef.current?.click();
             }}
           >
-            Seleccionar archivo
+            Choose file
           </button>
         </div>
         <input
@@ -378,14 +378,14 @@ export default function VideoUploadSection() {
         />
         {file && (
           <div style={{ marginTop: 10, textAlign: 'center' }}>
-            <strong>Seleccionado:</strong> {file.name} — {humanFileSize(file.size)}
+            <strong>Selected:</strong> {file.name} — {humanFileSize(file.size)}
           </div>
         )}
       </div>
 
       {/* Selector de imagen de portada */}
       <div className="card section" style={{ border: '1px dashed var(--cd-border)' }}>
-        <strong>Portada (opcional)</strong>
+        <strong>Cover image (optional)</strong>
         <div style={{ height: 8 }} />
         <div className="row" style={{ alignItems: 'flex-start', gap: 12, flexWrap: 'wrap' }}>
           <div style={{ width: 280, maxWidth: '100%' }}>
@@ -393,12 +393,12 @@ export default function VideoUploadSection() {
               {coverPreview ? (
                 <img
                   src={coverPreview}
-                  alt="Vista previa de portada"
+                  alt="Cover preview"
                   style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 />
               ) : (
                 <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center' }}>
-                  <div className="pill">Sin portada seleccionada</div>
+                  <div className="pill">No cover selected</div>
                 </div>
               )}
             </div>
@@ -416,7 +416,7 @@ export default function VideoUploadSection() {
               onClick={() => coverInputRef.current?.click()}
               type="button"
             >
-              Elegir imagen
+              Choose image
             </button>
             {coverFile && (
               <button
@@ -424,20 +424,20 @@ export default function VideoUploadSection() {
                 type="button"
                 onClick={() => { setCoverFile(null); setCoverPreview(null); }}
               >
-                Quitar portada
+                Remove cover
               </button>
             )}
           </div>
         </div>
         <div className="muted" style={{ fontSize: 12, marginTop: 6 }}>
-          Formatos permitidos: JPG, PNG, WEBP. Máximo 5MB.
+          Allowed formats: JPG, PNG, WEBP. Maximum 5MB.
         </div>
       </div>
 
       {/* Progreso y botón de subida */}
       <div className="row" style={{ alignItems: 'center', gap: 12 }}>
         <button className="btn" onClick={handleUpload} disabled={cargando}>
-          {cargando ? 'Subiendo...' : 'Subir video'}
+          {cargando ? 'Uploading...' : 'Upload Video'}
         </button>
         {cargando && (
           <div style={{ flex: 1 }}>
@@ -469,12 +469,12 @@ export default function VideoUploadSection() {
       {/* Lista de videos subidos */}
       <div className="card section" style={{ border: '1px dashed var(--cd-border)' }}>
         <div className="row" style={{ justifyContent: 'space-between' }}>
-          <strong>Videos subidos</strong>
-          {cargandoLista && <span className="muted">Cargando...</span>}
+          <strong>Uploaded videos</strong>
+          {cargandoLista && <span className="muted">Loading...</span>}
         </div>
         <div style={{ height: 8 }} />
         {(!lista || lista.length === 0) && !cargandoLista && (
-          <div className="muted">Aún no hay videos. ¡Sé el primero en compartir!</div>
+          <div className="muted">No videos yet. Be the first to share!</div>
         )}
         {(lista || []).map((v, idx) => {
           // Normalización de campos, incluyendo portada
@@ -518,16 +518,16 @@ export default function VideoUploadSection() {
               <div style={{ display: 'grid', minWidth: 0 }}>
                 <span style={{ fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</span>
                 <span className="muted" style={{ fontSize: 12 }}>
-                  {size ? humanFileSize(size) : 'Tamaño desconocido'} • {dateFmt}
+                  {size ? humanFileSize(size) : 'Unknown size'} • {dateFmt}
                 </span>
               </div>
               <div className="row" style={{ gap: 8 }}>
                 {url && url !== '#' ? (
                   <a className="btn secondary" href={url} target="_blank" rel="noreferrer">
-                    Ver / Reproducir
+                    View / Play
                   </a>
                 ) : (
-                  <span className="pill">Sin enlace</span>
+                  <span className="pill">No link</span>
                 )}
               </div>
             </div>
