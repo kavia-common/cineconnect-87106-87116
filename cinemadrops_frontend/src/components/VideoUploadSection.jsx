@@ -498,18 +498,18 @@ export default function VideoUploadSection() {
               className="row"
               style={{
                 justifyContent: 'space-between',
-                padding: '10px 0',
+                padding: '12px 0',
                 borderTop: '1px solid var(--cd-border)',
                 alignItems: 'center',
-                gap: 12
+                gap: 14
               }}
             >
-              <div style={{ width: 120, flexShrink: 0 }}>
+              <div style={{ width: 200, maxWidth: '30%', flexShrink: 0 }}>
                 {cover ? (
                   <img
                     src={cover}
                     alt={`Portada de ${name}`}
-                    style={{ width: '100%', aspectRatio: '16/9', objectFit: 'cover', borderRadius: 8, border: '1px solid var(--cd-border)' }}
+                    style={{ width: '100%', aspectRatio: '16/9', objectFit: 'cover', borderRadius: 10, border: '1px solid var(--cd-border)' }}
                   />
                 ) : (
                   <div style={{ width: '100%', aspectRatio: '16/9' }}>{placeholderThumb}</div>

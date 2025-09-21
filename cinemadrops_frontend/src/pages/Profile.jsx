@@ -183,6 +183,8 @@ export default function Profile() {
                     background: 'rgba(9,13,15,.8)',
                     borderColor: '#20313a',
                     color: '#d6eef2',
+                    padding: '6px 10px',
+                    fontSize: 13
                   }}
                 >
                   ★ {v.likes} • ⏱ {v.duracion}m
