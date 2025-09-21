@@ -16,6 +16,7 @@ import NotFound from './pages/NotFound';
 import ChatDrawer from './drawers/ChatDrawer';
 import NotificationsDrawer from './drawers/NotificationsDrawer';
 import QuickActionsDrawer from './drawers/QuickActionsDrawer';
+import Profile from './pages/Profile';
 
 // PUBLIC_INTERFACE
 function App() {
@@ -48,6 +49,7 @@ function App() {
                   <Route path="/forums/*" element={<Forums />} />
                   <Route path="/challenges" element={<Challenges />} />
                   <Route path="/curated" element={<Curated />} />
+                  <Route path="/perfil" element={<Profile />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </main>
