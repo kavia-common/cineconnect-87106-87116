@@ -107,7 +107,7 @@ img { max-width: 100%; display: block; }
 }
 .main-grid {
   display: grid;
-  grid-template-columns: 260px 1fr 320px;
+  grid-template-columns: 1fr 320px; /* removed left sidebar; main now starts flush left */
   gap: 16px;
   padding: 16px;
 }
@@ -155,16 +155,9 @@ img { max-width: 100%; display: block; }
 }
 .pill .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--cd-primary); }
 
-/* Sidebar sections */
-.sidebar { display: flex; flex-direction: column; gap: 16px; }
-.sidebar .section { padding: 12px; }
-
-/* Collapsible helper (kept generic and playful) */
+/* (left sidebar removed) */
+/* Compact filter chips on small screens */
 @media (max-width: 700px) {
-  .sidebar .section .pill[aria-expanded] {
-    padding: 6px 10px;
-  }
-  /* Compact filter chips on small screens */
   .card.section .pill[aria-pressed] {
     padding: 6px 10px;
     font-size: 13px;
@@ -184,24 +177,23 @@ img { max-width: 100%; display: block; }
   gap: 24px;
 }
 
-/* Discover section: padding for the overall grid block */
+/* Discover section: tighter padding so content aligns with left edge */
 .discover-section {
-  /* playful, comfy spacing around the whole grid */
-  padding: 20px;
+  padding: 12px 16px;
   border-radius: var(--cd-radius);
 }
 
-/* Slightly larger padding on wider screens */
+/* Slightly larger padding on wider screens, still aligned with container gutters */
 @media (min-width: 900px) {
   .discover-section {
-    padding: 24px;
+    padding: 16px 18px;
   }
 }
 
 /* Compact yet comfy on small screens */
 @media (max-width: 700px) {
   .discover-section {
-    padding: 16px;
+    padding: 10px 12px;
   }
 }
 @media (max-width: 1100px) {

@@ -38,7 +38,7 @@ export default function FiltersBar({ onChange }) {
   };
 
   return (
-    <div className="card section" style={{ padding: 12 }}>
+    <div className="card section" style={{ padding: 12, margin: 0 }}>
       <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
         <div className="row" style={{ gap: 8 }}>
           <strong id={labelId}>Filters</strong>
