@@ -39,6 +39,8 @@ export default function Profile() {
       likes: v.likes ?? v.stars ?? 0,
       duracion: v.duration ?? v.length ?? 0,
       creado: v.createdAt || v.date || v.uploadedAt || v.timestamp || null,
+      // soporte para portada
+      portada: v.cover_image || v.cover || v.coverUrl || v.thumbnail || v.thumbnailUrl || v.poster || null,
     }));
 
     return {
@@ -164,8 +166,17 @@ export default function Profile() {
                 style={{
                   background:
                     'radial-gradient(40% 50% at 20% 10%, rgba(15,163,177,.16), transparent 70%), #0a0f12',
+                  position: 'relative'
                 }}
               >
+                {/* Mostrar portada si está disponible, con fallback a fondo decorativo */}
+                {v.portada || v.cover_image || v.cover || v.thumbnail || v.poster ? (
+                  <img
+                    src={v.portada || v.cover_image || v.cover || v.thumbnail || v.poster}
+                    alt={`Portada de ${v.titulo}`}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
+                ) : null}
                 <div
                   className="badge"
                   style={{

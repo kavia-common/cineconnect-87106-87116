@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import dayjs from 'dayjs';
 
-// Tipos de video permitidos y tamaño máximo en bytes (100MB)
-const ALLOWED_TYPES = [
+// Tipos y tamaños permitidos
+const ALLOWED_VIDEO_TYPES = [
   'video/mp4',
   'video/webm',
   'video/ogg',
@@ -10,24 +10,30 @@ const ALLOWED_TYPES = [
   'video/x-msvideo',
   'video/x-matroska'
 ];
-const MAX_SIZE = 100 * 1024 * 1024; // 100MB
+const MAX_VIDEO_SIZE = 100 * 1024 * 1024; // 100MB
+
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
 
 const API_ENDPOINT = 'https://s4myuxoa90.execute-api.us-east-2.amazonaws.com/devops/videos_shortfilms';
 
 /**
  * PUBLIC_INTERFACE
- * Componente de sección para subir y listar videos.
- * - Formulario con nombre, género, autor/creador, y carga de archivo (drag-and-drop y selección manual).
- * - Valida tipos/tamaño de archivo.
+ * Componente de sección para subir y listar videos con portada.
+ * - Formulario con nombre, género, autor/creador, archivo de video y portada opcional.
+ * - Valida tipos/tamaño de archivos.
  * - Barra de progreso de carga.
- * - Consume endpoint AWS para subir y listar.
- * - Lista videos con nombre, tamaño, fecha y enlace para ver.
+ * - Consume endpoint AWS para subir (FormData) y listar.
+ * - Lista videos con nombre, tamaño, fecha, enlace y la portada si existe.
  */
 export default function VideoUploadSection() {
   const [nombre, setNombre] = useState('');
   const [genero, setGenero] = useState('Drama');
   const [autor, setAutor] = useState('');
   const [file, setFile] = useState(null);
+
+  const [coverFile, setCoverFile] = useState(null);
+  const [coverPreview, setCoverPreview] = useState(null);
 
   const [dragOver, setDragOver] = useState(false);
 
@@ -39,6 +45,7 @@ export default function VideoUploadSection() {
   const [cargandoLista, setCargandoLista] = useState(false);
 
   const inputRef = useRef(null);
+  const coverInputRef = useRef(null);
 
   // Géneros sugeridos
   const generos = useMemo(
@@ -90,20 +97,20 @@ export default function VideoUploadSection() {
     setDragOver(false);
     if (e.dataTransfer?.files?.length) {
       const f = e.dataTransfer.files[0];
-      validateAndSetFile(f);
+      validateAndSetVideo(f);
     }
   };
 
-  const validateAndSetFile = (f) => {
+  const validateAndSetVideo = (f) => {
     if (!f) return;
-    if (!ALLOWED_TYPES.includes(f.type)) {
+    if (!ALLOWED_VIDEO_TYPES.includes(f.type)) {
       setMensaje({
         type: 'error',
         text: 'Tipo de archivo no permitido. Sube un video MP4, WebM, OGG, MOV, AVI o MKV.'
       });
       return;
     }
-    if (f.size > MAX_SIZE) {
+    if (f.size > MAX_VIDEO_SIZE) {
       setMensaje({
         type: 'error',
         text: 'El archivo supera el tamaño máximo permitido (100MB).'
@@ -116,7 +123,39 @@ export default function VideoUploadSection() {
 
   const onFileChange = (e) => {
     const f = e.target.files?.[0];
-    validateAndSetFile(f);
+    validateAndSetVideo(f);
+  };
+
+  const validateAndSetCover = (f) => {
+    if (!f) {
+      setCoverFile(null);
+      setCoverPreview(null);
+      return;
+    }
+    if (!ALLOWED_IMAGE_TYPES.includes(f.type)) {
+      setMensaje({
+        type: 'error',
+        text: 'La portada debe ser una imagen JPG, PNG o WEBP.'
+      });
+      return;
+    }
+    if (f.size > MAX_IMAGE_SIZE) {
+      setMensaje({
+        type: 'error',
+        text: 'La imagen de portada supera el máximo de 5MB.'
+      });
+      return;
+    }
+    setMensaje(null);
+    setCoverFile(f);
+    const reader = new FileReader();
+    reader.onload = () => setCoverPreview(reader.result);
+    reader.readAsDataURL(f);
+  };
+
+  const onCoverChange = (e) => {
+    const f = e.target.files?.[0];
+    validateAndSetCover(f);
   };
 
   const handleUpload = async () => {
@@ -139,6 +178,11 @@ export default function VideoUploadSection() {
       form.append('author', autor);
       form.append('genre', genero);
       form.append('file', file);
+      // Adjuntamos imagen de portada si existe
+      if (coverFile) {
+        // el backend puede aceptar 'cover_image' como archivo multipart
+        form.append('cover_image', coverFile);
+      }
 
       const xhr = new XMLHttpRequest();
       xhr.open('POST', API_ENDPOINT, true);
@@ -172,6 +216,8 @@ export default function VideoUploadSection() {
       setAutor('');
       setGenero('Drama');
       setFile(null);
+      setCoverFile(null);
+      setCoverPreview(null);
       setProgreso(0);
 
       // Recargar lista
@@ -223,6 +269,14 @@ export default function VideoUploadSection() {
     } while (Math.abs(bytes) >= thresh && u < units.length - 1);
     return bytes.toFixed(1) + ' ' + units[u];
   };
+
+  const placeholderThumb = (
+    <div className="film-thumb" style={{ background: '#eef6f7', position: 'relative' }}>
+      <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', color: '#7a8b94' }}>
+        <div className="pill">Sin portada</div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="card section" style={{ display: 'grid', gap: 12 }}>
@@ -276,7 +330,7 @@ export default function VideoUploadSection() {
         </div>
       </div>
 
-      {/* Área de drag-and-drop */}
+      {/* Área de drag-and-drop del video */}
       <div
         onDragOver={(e) => {
           e.preventDefault();
@@ -318,7 +372,7 @@ export default function VideoUploadSection() {
         <input
           type="file"
           ref={inputRef}
-          accept={ALLOWED_TYPES.join(',')}
+          accept={ALLOWED_VIDEO_TYPES.join(',')}
           style={{ display: 'none' }}
           onChange={onFileChange}
         />
@@ -327,6 +381,57 @@ export default function VideoUploadSection() {
             <strong>Seleccionado:</strong> {file.name} — {humanFileSize(file.size)}
           </div>
         )}
+      </div>
+
+      {/* Selector de imagen de portada */}
+      <div className="card section" style={{ border: '1px dashed var(--cd-border)' }}>
+        <strong>Portada (opcional)</strong>
+        <div style={{ height: 8 }} />
+        <div className="row" style={{ alignItems: 'flex-start', gap: 12, flexWrap: 'wrap' }}>
+          <div style={{ width: 280, maxWidth: '100%' }}>
+            <div className="film-thumb" style={{ position: 'relative', background: '#f5fafb' }}>
+              {coverPreview ? (
+                <img
+                  src={coverPreview}
+                  alt="Vista previa de portada"
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+              ) : (
+                <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center' }}>
+                  <div className="pill">Sin portada seleccionada</div>
+                </div>
+              )}
+            </div>
+          </div>
+          <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+            <input
+              type="file"
+              ref={coverInputRef}
+              accept={ALLOWED_IMAGE_TYPES.join(',')}
+              style={{ display: 'none' }}
+              onChange={onCoverChange}
+            />
+            <button
+              className="btn secondary"
+              onClick={() => coverInputRef.current?.click()}
+              type="button"
+            >
+              Elegir imagen
+            </button>
+            {coverFile && (
+              <button
+                className="pill"
+                type="button"
+                onClick={() => { setCoverFile(null); setCoverPreview(null); }}
+              >
+                Quitar portada
+              </button>
+            )}
+          </div>
+        </div>
+        <div className="muted" style={{ fontSize: 12, marginTop: 6 }}>
+          Formatos permitidos: JPG, PNG, WEBP. Máximo 5MB.
+        </div>
       </div>
 
       {/* Progreso y botón de subida */}
@@ -372,12 +477,20 @@ export default function VideoUploadSection() {
           <div className="muted">Aún no hay videos. ¡Sé el primero en compartir!</div>
         )}
         {(lista || []).map((v, idx) => {
-          // Intento de normalización de campos
+          // Normalización de campos, incluyendo portada
           const name = v.name || v.title || v.filename || `Video ${idx + 1}`;
           const size = v.size || v.filesize || v.contentLength || v.length || null;
           const dateRaw = v.date || v.createdAt || v.LastModified || v.uploadedAt || v.timestamp;
           const dateFmt = dateRaw ? (dayjs(dateRaw).isValid() ? dayjs(dateRaw).format('YYYY-MM-DD HH:mm') : String(dateRaw)) : '—';
           const url = v.url || v.link || v.Location || v.signedUrl || v.videoUrl || '#';
+          const cover =
+            v.cover_image ||
+            v.cover ||
+            v.coverUrl ||
+            v.thumbnail ||
+            v.thumbnailUrl ||
+            v.poster ||
+            null;
 
           return (
             <div
@@ -387,11 +500,23 @@ export default function VideoUploadSection() {
                 justifyContent: 'space-between',
                 padding: '10px 0',
                 borderTop: '1px solid var(--cd-border)',
-                alignItems: 'center'
+                alignItems: 'center',
+                gap: 12
               }}
             >
-              <div style={{ display: 'grid' }}>
-                <span style={{ fontWeight: 700 }}>{name}</span>
+              <div style={{ width: 120, flexShrink: 0 }}>
+                {cover ? (
+                  <img
+                    src={cover}
+                    alt={`Portada de ${name}`}
+                    style={{ width: '100%', aspectRatio: '16/9', objectFit: 'cover', borderRadius: 8, border: '1px solid var(--cd-border)' }}
+                  />
+                ) : (
+                  <div style={{ width: '100%', aspectRatio: '16/9' }}>{placeholderThumb}</div>
+                )}
+              </div>
+              <div style={{ display: 'grid', minWidth: 0 }}>
+                <span style={{ fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</span>
                 <span className="muted" style={{ fontSize: 12 }}>
                   {size ? humanFileSize(size) : 'Tamaño desconocido'} • {dateFmt}
                 </span>
