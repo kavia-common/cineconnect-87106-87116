@@ -6,7 +6,7 @@ Cinemadrops es una plataforma lúdica y colaborativa para cortometrajes. Este fr
 - Perfiles de creadores
 - Comentarios y foros
 - Retos semanales
-- Layout responsive con navegación superior, sidebars y una cuadrícula principal
+- Layout responsive con navegación superior, barra lateral derecha y una cuadrícula principal
 
 Estado actual: se ha eliminado la funcionalidad de chat en vivo y notificaciones en tiempo real.
 
@@ -34,7 +34,7 @@ Abre http://localhost:3000
 
 ## Estructura del proyecto
 - src/services/Api.js — helpers de API y SWR
-- src/components/* — Componentes reutilizables (TopNav, Sidebars, FilmCard, Comments)
+- src/components/* — Componentes reutilizables (TopNav, RightSidebar, FilmCard, Comments)
 - src/pages/* — Páginas de rutas (Home, FilmDetails, CreatorProfile, Forums, Challenges, Curated)
 - src/index.css — Estilos del tema
 

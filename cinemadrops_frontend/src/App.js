@@ -5,7 +5,6 @@ import { ApiProvider } from './services/Api';
 import { AuthProvider } from './services/Auth';
 import { ThemeProvider } from './services/Theme';
 import TopNav from './components/TopNav';
-import LeftSidebar from './components/LeftSidebar';
 import RightSidebar from './components/RightSidebar';
 import Home from './pages/Home';
 import FilmDetails from './pages/FilmDetails';
@@ -28,9 +27,6 @@ function App() {
             <div className="app-shell">
               <TopNav />
               <div className="main-grid container">
-                <aside className="sidebar">
-                  <LeftSidebar />
-                </aside>
                 <main>
                   <Routes>
                     <Route path="/" element={<Home />} />
