@@ -118,17 +118,61 @@ export default function FilmDetails() {
       aria-label={ariaLabel || label}
       title={label}
       style={{
+        // Ensure the pill uses themed background and border from global CSS variables
+        background: 'var(--cd-chip-bg)',
+        borderColor: 'var(--cd-border)',
+        // Improve accessibility and interaction
         cursor: 'pointer',
         userSelect: 'none',
         display: 'inline-flex',
         alignItems: 'center',
         gap: 8,
-        background: 'var(--cd-chip-bg)',
+        // Themed text/icon color for both modes
+        color: 'var(--cd-text)',
+        // Focus visibility for keyboard users
+        outline: 'none',
+      }}
+      onFocus={(e) => {
+        e.currentTarget.style.boxShadow = '0 0 0 3px rgba(15,163,177,0.35)';
+        e.currentTarget.style.borderColor = 'var(--cd-primary)';
+      }}
+      onBlur={(e) => {
+        e.currentTarget.style.boxShadow = 'none';
+        e.currentTarget.style.borderColor = 'var(--cd-border)';
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,.06)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.boxShadow = 'none';
       }}
     >
-      <span aria-hidden="true" role="img">{icon}</span>
-      <span>{label}</span>
-      <span className="badge" style={{ fontWeight: 800 }}>{count}</span>
+      <span
+        aria-hidden="true"
+        role="img"
+        style={{
+          // Ensure emoji/icons inherit themed text color for dark/light contrast
+          color: 'inherit',
+          // Slightly larger for readability
+          fontSize: 16,
+          lineHeight: 1,
+        }}
+      >
+        {icon}
+      </span>
+      <span style={{ color: 'inherit' }}>{label}</span>
+      <span
+        className="badge"
+        style={{
+          fontWeight: 800,
+          // Badge already themed in index.css, ensure readable contrast in dark mode
+          background: 'var(--cd-badge-bg)',
+          color: 'var(--cd-badge-text)',
+          borderColor: 'var(--cd-border)',
+        }}
+      >
+        {count}
+      </span>
     </button>
   );
 
