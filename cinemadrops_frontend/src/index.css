@@ -42,6 +42,13 @@ body {
 a { color: inherit; text-decoration: none; }
 img { max-width: 100%; display: block; }
 
+/* images inside padded thumb should fill available area */
+.film-thumb > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 .container {
   width: 100%;
   max-width: 1320px; /* give a bit more room for bigger cards */
@@ -145,6 +152,17 @@ html[data-theme="dark"] .btn.secondary { box-shadow: 0 8px 24px rgba(255,182,39,
 .sidebar { display: flex; flex-direction: column; gap: 16px; }
 .sidebar .section { padding: 12px; }
 
+/* generic card content section spacing used across pages and cards with inner content */
+.card.section {
+  padding: 16px 18px;
+}
+
+@media (max-width: 620px) {
+  .card.section {
+    padding: 14px 16px;
+  }
+}
+
 /* Film grid wrapper adds consistent outer spacing around the group of cards */
 .film-grid-section {
   /* subtle separation from edges; playful but soft */
@@ -216,6 +234,8 @@ html[data-theme="dark"] .film-grid-section {
   position: relative;
   border-bottom-left-radius: var(--cd-radius);
   border-bottom-right-radius: var(--cd-radius);
+  /* internal inset padding so overlays/images don't visually hug the border */
+  padding: 2px;
 }
 
 /* Simplified discover layout: single column since quick tags/promo aside removed */
@@ -297,9 +317,9 @@ html[data-theme="dark"] .film-grid-section {
 /* Slightly bigger badge to match larger visuals */
 .film-thumb .badge {
   position: absolute;
-  top: 12px;
-  left: 12px;
-  padding: 8px 12px;
+  top: 14px; /* a bit more breathing from the top */
+  left: 14px; /* and from the left edge */
+  padding: 9px 13px; /* slightly larger for touch targets */
   font-size: 13px;
   border-radius: 999px;
   background: color-mix(in srgb, var(--cd-surface) 92%, transparent);
@@ -309,9 +329,18 @@ html[data-theme="dark"] .film-grid-section {
 }
 
 .film-meta {
-  padding: 14px;
+  /* increased padding ensures titles, descriptions, and buttons don't touch edges */
+  padding: 16px 18px;
   display: grid;
-  gap: 6px;
+  gap: 8px;
+}
+
+/* tighten slightly on smaller screens while keeping comfortable spacing */
+@media (max-width: 620px) {
+  .film-meta {
+    padding: 14px 16px;
+    gap: 7px;
+  }
 }
 
 .film-title { font-weight: 900; font-size: 16px; }
