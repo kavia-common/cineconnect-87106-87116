@@ -1,45 +1,51 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
 import { useApi } from '../services/Api';
 import Comments from '../components/Comments';
 
 /**
  * PUBLIC_INTERFACE
  * FilmDetails shows a single film page with content and social features.
- * It supports two data sources:
- *  - AWS Lambda API: GET /videos_shortfilms/{filename}
- *  - Local backend (tests/back-compat): GET /films/:id
+ * Data source priority:
+ *  1) If navigated from Discover (or elsewhere) with state, use state.film directly (instant render).
+ *  2) Otherwise, try AWS Lambda API GET /videos_shortfilms/{filenameOrId}.
+ *  3) Fallback to local backend GET /films/:id (used for tests/back-compat).
  *
  * It reads the route param as a generic "slug" which could be either a filename or an id.
  */
 export default function FilmDetails() {
   const { id: slug } = useParams();
+  const location = useLocation();
   const { useFetch } = useApi();
 
-  // Local backend fetch (used for tests/backward compatibility)
-  const { data: localFilm } = useFetch(`/films/${slug}`, { fallbackData: fallback(slug) });
+  // If we navigated with state, prefer it (instant)
+  const filmFromState = location?.state?.film || null;
 
-  // AWS Lambda fetch for real shortfilm details by filename
+  // Local backend fetch (used for tests/backward compatibility) - only if no state and as fallback
+  const { data: localFilm } = useFetch(filmFromState ? null : `/films/${slug}`, { fallbackData: filmFromState ? undefined : fallback(slug) });
+
+  // AWS Lambda fetch for real shortfilm details by filename - only if no state
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || process.env.REACT_APP_API_BASE || 'https://s4myuxoa90.execute-api.us-east-2.amazonaws.com/devops';
   const buildAwsUrl = (filename) => `${API_BASE_URL.replace(/\/$/, '')}/videos_shortfilms/${encodeURIComponent(filename)}`;
 
   const [awsFilm, setAwsFilm] = useState(null);
-  const [awsLoading, setAwsLoading] = useState(true);
+  const [awsLoading, setAwsLoading] = useState(!filmFromState);
   const [awsError, setAwsError] = useState(null);
 
   useEffect(() => {
+    if (filmFromState) {
+      // We already have data; no need to fetch
+      setAwsLoading(false);
+      return;
+    }
     let cancelled = false;
     async function fetchAws() {
       setAwsLoading(true);
       setAwsError(null);
       try {
-        // Heuristic: treat slug as a filename if it contains a dot or looks like a name (non-uuid simple ids also allowed)
         const url = buildAwsUrl(slug);
         const res = await fetch(url, { headers: { Accept: 'application/json' } });
-        // Some gateways return 404 if not found; in that case, we simply fall back to localFilm
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status}`);
-        }
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const ct = res.headers.get('content-type') || '';
         let body;
         if (ct.includes('application/json')) {
@@ -48,8 +54,6 @@ export default function FilmDetails() {
           const text = await res.text();
           try { body = JSON.parse(text); } catch { body = { raw: text }; }
         }
-
-        // Normalize AWS response
         const item = normalizeAwsFilm(body, slug);
         if (!cancelled) setAwsFilm(item);
       } catch (e) {
@@ -60,16 +64,14 @@ export default function FilmDetails() {
     }
     fetchAws();
     return () => { cancelled = true; };
-  }, [slug]);
+  }, [slug, filmFromState]);
 
-  // Choose which film to show: prefer awsFilm if loaded successfully
-  const film = useMemo(() => {
-    return awsFilm || localFilm;
-  }, [awsFilm, localFilm]);
+  // Choose which film to show: prefer state → aws → local
+  const film = useMemo(() => filmFromState || awsFilm || localFilm, [filmFromState, awsFilm, localFilm]);
 
-  // Loading/error states (only show AWS states if we didn't get any film yet)
-  const isLoading = awsLoading && !awsFilm && !localFilm;
-  const isError = awsError && !awsFilm && !localFilm;
+  // Loading/error states - show loading only if we don't have any film yet
+  const isLoading = !film && (awsLoading);
+  const isError = !film && (!!awsError);
 
   // Ultra-compact player/card styling so the individual short looks small and light
   const compactCard = {
@@ -100,7 +102,7 @@ export default function FilmDetails() {
   // Local-only reactions state (no backend persistence yet)
   const [reactions, setReactions] = useState(() => ({
     dislike: 0,
-    like: film?.likes ? Math.max(0, Number(film.likes) || 0) : 0, // seed likes if available
+    like: film?.likes ? Math.max(0, Number(film.likes) || 0) : 0,
     love: 0,
     lifeChanging: 0,
   }));
@@ -118,18 +120,14 @@ export default function FilmDetails() {
       aria-label={ariaLabel || label}
       title={label}
       style={{
-        // Ensure the pill uses themed background and border from global CSS variables
         background: 'var(--cd-chip-bg)',
         borderColor: 'var(--cd-border)',
-        // Improve accessibility and interaction
         cursor: 'pointer',
         userSelect: 'none',
         display: 'inline-flex',
         alignItems: 'center',
         gap: 8,
-        // Themed text/icon color for both modes
         color: 'var(--cd-text)',
-        // Focus visibility for keyboard users
         outline: 'none',
       }}
       onFocus={(e) => {
@@ -147,30 +145,11 @@ export default function FilmDetails() {
         e.currentTarget.style.boxShadow = 'none';
       }}
     >
-      <span
-        aria-hidden="true"
-        role="img"
-        style={{
-          // Ensure emoji/icons inherit themed text color for dark/light contrast
-          color: 'inherit',
-          // Slightly larger for readability
-          fontSize: 16,
-          lineHeight: 1,
-        }}
-      >
+      <span aria-hidden="true" role="img" style={{ color: 'inherit', fontSize: 16, lineHeight: 1 }}>
         {icon}
       </span>
       <span style={{ color: 'inherit' }}>{label}</span>
-      <span
-        className="badge"
-        style={{
-          fontWeight: 800,
-          // Badge already themed in index.css, ensure readable contrast in dark mode
-          background: 'var(--cd-badge-bg)',
-          color: 'var(--cd-badge-text)',
-          borderColor: 'var(--cd-border)',
-        }}
-      >
+      <span className="badge" style={{ fontWeight: 800, background: 'var(--cd-badge-bg)', color: 'var(--cd-badge-text)', borderColor: 'var(--cd-border)' }}>
         {count}
       </span>
     </button>
@@ -192,6 +171,15 @@ export default function FilmDetails() {
     );
   }
 
+  // Safety fallback (shouldn't happen usually due to fallback(local) in tests)
+  if (!film) {
+    return (
+      <div className="card section">
+        Film not found.
+      </div>
+    );
+  }
+
   return (
     <div className="page-film">
       <div className="card" style={compactCard} aria-label={`Detalle del corto ${film.title}`}>
@@ -207,34 +195,10 @@ export default function FilmDetails() {
           {/* Reactions row */}
           <div style={{ height: 10 }} />
           <div className="row" style={{ flexWrap: 'wrap', gap: 8 }}>
-            <ReactionButton
-              icon="👎"
-              label="Dislike"
-              ariaLabel="Dislike this short"
-              count={reactions.dislike}
-              onClick={() => inc('dislike')}
-            />
-            <ReactionButton
-              icon="👍"
-              label="Like"
-              ariaLabel="Like this short"
-              count={reactions.like}
-              onClick={() => inc('like')}
-            />
-            <ReactionButton
-              icon="❤️"
-              label="Love"
-              ariaLabel="Love this short"
-              count={reactions.love}
-              onClick={() => inc('love')}
-            />
-            <ReactionButton
-              icon="🌟"
-              label="Life changing"
-              ariaLabel="This short is life changing"
-              count={reactions.lifeChanging}
-              onClick={() => inc('lifeChanging')}
-            />
+            <ReactionButton icon="👎" label="Dislike" ariaLabel="Dislike this short" count={reactions.dislike} onClick={() => inc('dislike')} />
+            <ReactionButton icon="👍" label="Like" ariaLabel="Like this short" count={reactions.like} onClick={() => inc('like')} />
+            <ReactionButton icon="❤️" label="Love" ariaLabel="Love this short" count={reactions.love} onClick={() => inc('love')} />
+            <ReactionButton icon="🌟" label="Life changing" ariaLabel="This short is life changing" count={reactions.lifeChanging} onClick={() => inc('lifeChanging')} />
           </div>
 
           <p className="muted" style={{ marginTop: 8, fontSize: 14, lineHeight: 1.45 }}>{film.description}</p>
@@ -275,14 +239,14 @@ export default function FilmDetails() {
             <strong>Cast & Crew</strong>
             <div style={{ height: 8 }} />
             <ul style={{ margin: 0, paddingLeft: 18 }}>
-              {film.crew.map((c, i) => <li key={i}>{c}</li>)}
+              {film.crew?.map((c, i) => <li key={i}>{c}</li>)}
             </ul>
           </div>
           <div className="card section">
             <strong>More by {film.author}</strong>
             <div style={{ height: 8 }} />
             <div className="row" style={{ flexWrap: 'wrap' }}>
-              {film.more.map(m => <span key={m} className="pill" style={{ margin: 4 }}>{m}</span>)}
+              {Array.isArray(film.more) ? film.more.map(m => <span key={m} className="pill" style={{ margin: 4 }}>{m}</span>) : null}
             </div>
           </div>
         </div>

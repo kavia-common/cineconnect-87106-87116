@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import FilmCard from '../components/FilmCard';
 import { getAssetUrl } from '../utils/assets';
+import { Link } from 'react-router-dom';
 
 /**
  * Image import pattern note:
@@ -115,6 +116,8 @@ export default function Discover() {
         url,
         genre,
         uploadDate,
+        // keep original item as well in case details page wants full shape
+        _raw: item,
       };
     });
   }, [data]);
@@ -166,16 +169,40 @@ export default function Discover() {
 
       {!isLoading && !error && films.length > 0 && (
         <div className="film-grid">
-          {films.map((film, idx) => (
-            <FilmCard
-              key={film.id}
-              film={film}
-              // Keep compatibility with FilmCard which accepts either imported URLs or public paths.
-              // We pass the first imported image as the placeholder and cycle others as previews.
-              placeholderImage={getAssetUrl('/assets/pexels-amar-29656074.jpg')}
-              previewImage={pickPreviewImage(film, idx)}
-            />
-          ))}
+          {films.map((film, idx) => {
+            const toHref = `/film/${encodeURIComponent(film.filename || film.id)}`;
+            // We pass complete film data via state so FilmDetails can render instantly without extra fetch
+            const state = { film, from: 'discover' };
+            return (
+              <Link
+                key={film.id}
+                to={toHref}
+                state={state}
+                className="card film-card"
+                style={{ textDecoration: 'none' }}
+                aria-label={`Abrir corto ${film.title}`}
+              >
+                <div
+                  className="film-thumb"
+                  style={{ position: 'relative', background: 'var(--cd-bg)' }}
+                >
+                  <img
+                    src={pickPreviewImage(film, idx)}
+                    alt={`Preview de ${film.title}`}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    onError={(e) => {
+                      e.currentTarget.src = getAssetUrl('/assets/pexels-amar-29656074.jpg');
+                    }}
+                  />
+                  <div className="badge">★ {film.likes} • ⏱ {film.duration}m</div>
+                </div>
+                <div className="film-meta">
+                  <div className="film-title">{film.title}</div>
+                  <div className="film-author">by {film.author}</div>
+                </div>
+              </Link>
+            );
+          })}
         </div>
       )}
 
