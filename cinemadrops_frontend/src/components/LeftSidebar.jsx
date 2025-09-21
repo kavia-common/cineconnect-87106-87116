@@ -2,32 +2,20 @@ import React from 'react';
 
 /**
  * PUBLIC_INTERFACE
- * LeftSidebar shows playful filter controls.
- * The "Discover with hashtags" section has been removed per request.
+ * LeftSidebar now focuses on auxiliary content (filters moved to main content).
  */
 export default function LeftSidebar() {
-  const tags = ['Drama', 'Comedy', 'Sci-Fi', 'Documentary', 'Animation', 'Horror', 'Experimental'];
   return (
     <>
       <div className="card section">
-        <div className="row" style={{ justifyContent: 'space-between' }}>
-          <strong>Filters</strong>
-          <span className="badge">New</span>
-        </div>
+        <strong>Browse</strong>
         <div style={{ height: 8 }} />
         <div className="row" style={{ flexWrap: 'wrap' }}>
-          {tags.map(t => (
-            <button key={t} className="pill" style={{ margin: 4 }}>{t}</button>
-          ))}
+          <span className="pill" style={{ margin: 4 }}>Genres</span>
+          <span className="pill" style={{ margin: 4 }}>Staff Picks</span>
+          <span className="pill" style={{ margin: 4 }}>Awarded</span>
+          <span className="pill" style={{ margin: 4 }}>Indie</span>
         </div>
-        <div style={{ height: 12 }} />
-        <label className="muted" style={{ fontSize: 13 }}>Duration</label>
-        <select className="input" defaultValue="any">
-          <option value="any">Any</option>
-          <option value="lt5">&lt; 5 min</option>
-          <option value="5to15">5 - 15 min</option>
-          <option value="gt15">&gt; 15 min</option>
-        </select>
       </div>
     </>
   );

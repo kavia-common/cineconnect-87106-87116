@@ -2,13 +2,10 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import LeftSidebar from '../../components/LeftSidebar';
 
-test('LeftSidebar shows Filters and controls (without Discover with hashtags)', () => {
+test('LeftSidebar no longer shows Filters; focuses on browse shortcuts', () => {
   render(<LeftSidebar />);
-  expect(screen.getByText(/Filters/i)).toBeInTheDocument();
-  expect(screen.getByRole('combobox')).toBeInTheDocument();
-  // Presence of a few filter tags
-  expect(screen.getByRole('button', { name: /Drama/i })).toBeInTheDocument();
-  // Ensure the removed Discover section is not present
-  expect(screen.queryByText(/Discover/i)).not.toBeInTheDocument();
-  expect(screen.queryByText(/#behindthescenes/i)).not.toBeInTheDocument();
+  expect(screen.getByText(/Browse/i)).toBeInTheDocument();
+  expect(screen.getByText(/Genres/i)).toBeInTheDocument();
+  // Filters should not be here anymore
+  expect(screen.queryByText(/Filters/i)).not.toBeInTheDocument();
 });

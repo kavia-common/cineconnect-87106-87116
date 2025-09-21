@@ -223,3 +223,12 @@ img { max-width: 100%; display: block; }
   width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--cd-border); background: var(--cd-input-bg); color: var(--cd-text);
 }
 .badge { padding: 4px 8px; border-radius: 8px; background: var(--cd-badge-bg); color: var(--cd-badge-text); font-weight: 700; font-size: 12px; border: 1px solid var(--cd-border); }
+
+/* Subtle hover for selectable filter pills */
+.pill[aria-pressed="true"] {
+  background: rgba(15,163,177,0.08);
+  border-color: var(--cd-primary);
+}
+.pill:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,.06);
+}

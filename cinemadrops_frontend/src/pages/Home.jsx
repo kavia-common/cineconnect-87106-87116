@@ -1,14 +1,47 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { useApi } from '../services/Api';
 import FilmCard from '../components/FilmCard';
 
 /**
  * PUBLIC_INTERFACE
  * Home displays the discover feed and film grid.
+ * Filters are positioned above the videos grid in the main content.
  */
 export default function Home() {
   const { useFetch } = useApi();
   const { data: films } = useFetch('/films', { fallbackData: demoFilms });
+
+  // Local state for filters (client-side filtering for now)
+  const TAGS = ['Drama', 'Comedy', 'Sci-Fi', 'Documentary', 'Animation', 'Horror', 'Experimental'];
+  const [activeTags, setActiveTags] = useState(new Set());
+  const [duration, setDuration] = useState('any');
+
+  const toggleTag = (tag) => {
+    setActiveTags(prev => {
+      const next = new Set(prev);
+      if (next.has(tag)) next.delete(tag);
+      else next.add(tag);
+      return next;
+    });
+  };
+
+  const filtered = useMemo(() => {
+    return films.filter(f => {
+      // Duration filter (using demo/fallback duration minutes)
+      const d = f.duration ?? f.duracion ?? 0;
+      if (duration === 'lt5' && !(d < 5)) return false;
+      if (duration === '5to15' && !(d >= 5 && d <= 15)) return false;
+      if (duration === 'gt15' && !(d > 15)) return false;
+
+      // Tags filter (demo: match by title keywords when tags selected)
+      if (activeTags.size > 0) {
+        const title = (f.title || '').toLowerCase();
+        const hasMatch = [...activeTags].some(t => title.includes(t.toLowerCase()));
+        if (!hasMatch) return false;
+      }
+      return true;
+    });
+  }, [films, duration, activeTags]);
 
   return (
     <div className="page-home">
@@ -21,10 +54,52 @@ export default function Home() {
         <span className="pill">Awarded</span>
       </div>
 
+      {/* Filters moved from sidebar into main content */}
+      <div className="card section" role="region" aria-label="Filtros de videos">
+        <div className="row" style={{ justifyContent: 'space-between' }}>
+          <strong>Filters</strong>
+          <span className="badge">New</span>
+        </div>
+        <div style={{ height: 8 }} />
+        <div className="row" style={{ flexWrap: 'wrap' }}>
+          {TAGS.map((t) => {
+            const active = activeTags.has(t);
+            return (
+              <button
+                key={t}
+                className="pill"
+                aria-pressed={active}
+                onClick={() => toggleTag(t)}
+                style={{
+                  margin: 4,
+                  borderColor: active ? 'var(--cd-primary)' : 'var(--cd-border)',
+                  boxShadow: active ? '0 6px 18px rgba(15,163,177,.22)' : 'none'
+                }}
+              >
+                {active ? '✓ ' : ''}{t}
+              </button>
+            );
+          })}
+        </div>
+        <div style={{ height: 12 }} />
+        <label className="muted" style={{ fontSize: 13 }}>Duration</label>
+        <select
+          className="input"
+          aria-label="Filter by duration"
+          value={duration}
+          onChange={(e) => setDuration(e.target.value)}
+        >
+          <option value="any">Any</option>
+          <option value="lt5">&lt; 5 min</option>
+          <option value="5to15">5 - 15 min</option>
+          <option value="gt15">&gt; 15 min</option>
+        </select>
+      </div>
 
+      <div style={{ height: 12 }} />
 
       <div className="film-grid">
-        {films.map(f => <FilmCard key={f.id} film={f} />)}
+        {filtered.map(f => <FilmCard key={f.id} film={f} />)}
       </div>
     </div>
   );
