@@ -24,8 +24,8 @@ export default function TopNav() {
           <NavLink to="/curated" className="pill">Curated</NavLink>
           <NavLink to="/challenges" className="pill">Challenges</NavLink>
           <NavLink to="/forums" className="pill">Forums</NavLink>
-          <NavLink to="/subir" className="pill" aria-label="Subir Video">Subir Video</NavLink>
-          <NavLink to="/perfil" className="pill" aria-label="Ir a mi perfil">Perfil</NavLink>
+          <NavLink to="/upload" className="pill" aria-label="Upload Video">Upload Video</NavLink>
+          <NavLink to="/profile" className="pill" aria-label="Go to my profile">Profile</NavLink>
         </nav>
         <div className="space" />
         <button

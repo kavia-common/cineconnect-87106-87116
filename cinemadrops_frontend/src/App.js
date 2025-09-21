@@ -39,8 +39,8 @@ function App() {
                     <Route path="/forums/*" element={<Forums />} />
                     <Route path="/challenges" element={<Challenges />} />
                     <Route path="/curated" element={<Curated />} />
-                    <Route path="/perfil" element={<Profile />} />
-                    <Route path="/subir" element={<Upload />} />
+                    <Route path="/profile" element={<Profile />} />
+                    <Route path="/upload" element={<Upload />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </main>

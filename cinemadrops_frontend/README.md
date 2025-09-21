@@ -3,7 +3,7 @@
 Cinemadrops es una plataforma lúdica y colaborativa para cortometrajes. Este frontend implementa:
 - Feed de descubrimiento y listas curadas
 - Páginas detalladas de películas con “behind the scenes” y scripts
-- Perfiles de creadores
+- Perfiles de creadores (Creator Profiles)
 - Comentarios y foros
 - Retos semanales
 - Layout responsive con navegación superior, sidebars y una cuadrícula principal
