@@ -161,23 +161,29 @@ img { max-width: 100%; display: block; }
 
 /* Film grid
    Make cards larger and more prominent:
-   - Desktop: 2 columns (bigger cards)
-   - Medium: 2 columns
+   - Desktop: 1 column for very large, immersive cards
+   - Large screens: 2 columns
    - Mobile: 1 column
+   This prioritizes bigger video previews on Discover.
 */
 .film-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 22px;
+  grid-template-columns: 1fr; /* default: single large column */
+  gap: 24px;
 }
-@media (min-width: 1400px) {
-  /* on very large screens, allow 3 columns but keep sizable cards */
-  .film-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-}
-@media (max-width: 1100px) {
+
+/* Large screens: two big columns */
+@media (min-width: 1100px) {
   .film-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
-@media (max-width: 700px) {
+
+/* Ultra-wide screens: keep 2 columns to preserve large card size */
+@media (min-width: 1600px) {
+  .film-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* Tablet and below stay at 1 column for big visuals */
+@media (max-width: 900px) {
   .film-grid { grid-template-columns: 1fr; }
 }
 
@@ -191,8 +197,8 @@ img { max-width: 100%; display: block; }
 
 /* Larger preview area (taller for cinematic feel) */
 .film-thumb {
-  /* Slightly taller than 16/9 to feel more immersive */
-  aspect-ratio: 16/8.5;
+  /* Increase height for more cinematic impact */
+  aspect-ratio: 16/7.5;
   background: #eef6f7;
   position: relative;
 }
@@ -200,10 +206,10 @@ img { max-width: 100%; display: block; }
 /* Bigger badge to match bigger preview */
 .film-thumb .badge {
   position: absolute;
-  top: 14px;
-  left: 14px;
-  padding: 8px 13px;
-  font-size: 14px;
+  top: 16px;
+  left: 16px;
+  padding: 10px 14px;
+  font-size: 15px;
   border-radius: 999px;
   background: var(--cd-badge-bg);
   color: var(--cd-badge-text);
@@ -211,9 +217,17 @@ img { max-width: 100%; display: block; }
   box-shadow: 0 8px 22px rgba(0,0,0,.1);
 }
 
-.film-meta { padding: 16px; display: grid; gap: 8px; }
-.film-title { font-weight: 800; font-size: 1.12rem; }
-.film-author { color: var(--cd-muted); font-size: 13.5px; }
+.film-meta { padding: 18px; display: grid; gap: 8px; }
+.film-title { font-weight: 800; font-size: 1.18rem; }
+.film-author { color: var(--cd-muted); font-size: 14px; }
+
+/* Ensure consistency inside Profile's dark gallery as well */
+.page-profile .film-thumb .badge {
+  top: 12px;
+  left: 12px;
+  padding: 8px 12px;
+  font-size: 13.5px;
+}
 
 /* Rightbar */
 .rightbar { display: flex; flex-direction: column; gap: 16px; }
