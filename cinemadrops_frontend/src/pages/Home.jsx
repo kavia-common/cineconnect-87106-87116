@@ -5,8 +5,8 @@ import { getAssetUrl } from '../utils/assets';
 
 /**
  * PUBLIC_INTERFACE
- * Home displays the discover feed and film grid.
- * Filters are positioned above the videos grid in the main content.
+ * Home displays the discover feed and film grid with a collapsible Filters dropdown.
+ * Filters are hidden by default and can be expanded via a "Filters" button.
  */
 export default function Home() {
   const { useFetch } = useApi();
@@ -17,6 +17,9 @@ export default function Home() {
   const [activeTags, setActiveTags] = useState(new Set());
   const [duration, setDuration] = useState('any');
 
+  // Collapsible state
+  const [showFilters, setShowFilters] = useState(false);
+
   const toggleTag = (tag) => {
     setActiveTags(prev => {
       const next = new Set(prev);
@@ -24,6 +27,11 @@ export default function Home() {
       else next.add(tag);
       return next;
     });
+  };
+
+  const clearFilters = () => {
+    setActiveTags(new Set());
+    setDuration('any');
   };
 
   const filtered = useMemo(() => {
@@ -78,6 +86,9 @@ export default function Home() {
     return assetGallery[index % assetGallery.length];
   };
 
+  // Derive count of active filters for UX badge
+  const activeCount = (activeTags.size || 0) + (duration !== 'any' ? 1 : 0);
+
   return (
     <div className="page-home">
       <div className="row" style={{ marginBottom: 12 }}>
@@ -89,49 +100,83 @@ export default function Home() {
         <span className="pill">Awarded</span>
       </div>
 
-      {/* Filters moved from sidebar into main content */}
-      <div className="card section" role="region" aria-label="Filtros de videos">
-        <div className="row" style={{ justifyContent: 'space-between' }}>
-          <strong>Filters</strong>
-          <span className="badge">New</span>
-        </div>
-        <div style={{ height: 8 }} />
-        <div className="row" style={{ flexWrap: 'wrap' }}>
-          {TAGS.map((t) => {
-            const active = activeTags.has(t);
-            return (
-              <button
-                key={t}
-                className="pill"
-                aria-pressed={active}
-                onClick={() => toggleTag(t)}
-                style={{
-                  margin: 4,
-                  borderColor: active ? 'var(--cd-primary)' : 'var(--cd-border)',
-                  boxShadow: active ? '0 6px 18px rgba(15,163,177,.22)' : 'none'
-                }}
-              >
-                {active ? '✓ ' : ''}{t}
-              </button>
-            );
-          })}
-        </div>
-        <div style={{ height: 12 }} />
-        <label className="muted" style={{ fontSize: 13 }}>Duration</label>
-        <select
-          className="input"
-          aria-label="Filter by duration"
-          value={duration}
-          onChange={(e) => setDuration(e.target.value)}
+      {/* Filters dropdown trigger */}
+      <div className="row" style={{ marginBottom: 8 }}>
+        <button
+          type="button"
+          className="pill"
+          aria-expanded={showFilters}
+          aria-controls="filters-panel"
+          onClick={() => setShowFilters((v) => !v)}
+          title="Filters"
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}
         >
-          <option value="any">Any</option>
-          <option value="lt5">&lt; 5 min</option>
-          <option value="5to15">5 - 15 min</option>
-          <option value="gt15">&gt; 15 min</option>
-        </select>
+          <span aria-hidden="true" role="img">🔎</span>
+          Filters
+          {activeCount > 0 && (
+            <span className="badge" style={{ marginLeft: 6 }}>{activeCount}</span>
+          )}
+        </button>
+        {activeCount > 0 && (
+          <button type="button" className="pill" onClick={clearFilters} style={{ marginLeft: 8 }}>
+            Clear
+          </button>
+        )}
       </div>
 
-      <div style={{ height: 12 }} />
+      {/* Collapsible Filters Panel (hidden by default) */}
+      {showFilters && (
+        <div
+          id="filters-panel"
+          className="card section"
+          role="region"
+          aria-label="Filtros de videos"
+          style={{ marginBottom: 12 }}
+        >
+          <div className="row" style={{ justifyContent: 'space-between' }}>
+            <strong>Filters</strong>
+            <span className="badge">New</span>
+          </div>
+
+          <div style={{ height: 8 }} />
+
+          <div className="row" style={{ flexWrap: 'wrap' }}>
+            {TAGS.map((t) => {
+              const active = activeTags.has(t);
+              return (
+                <button
+                  key={t}
+                  className="pill"
+                  aria-pressed={active}
+                  onClick={() => toggleTag(t)}
+                  style={{
+                    margin: 4,
+                    borderColor: active ? 'var(--cd-primary)' : 'var(--cd-border)',
+                    boxShadow: active ? '0 6px 18px rgba(15,163,177,.22)' : 'none'
+                  }}
+                >
+                  {active ? '✓ ' : ''}{t}
+                </button>
+              );
+            })}
+          </div>
+
+          <div style={{ height: 12 }} />
+
+          <label className="muted" style={{ fontSize: 13 }}>Duration</label>
+          <select
+            className="input"
+            aria-label="Filter by duration"
+            value={duration}
+            onChange={(e) => setDuration(e.target.value)}
+          >
+            <option value="any">Any</option>
+            <option value="lt5">&lt; 5 min</option>
+            <option value="5to15">5 - 15 min</option>
+            <option value="gt15">&gt; 15 min</option>
+          </select>
+        </div>
+      )}
 
       <div className="film-grid">
         {filtered.map((f, idx) => (
