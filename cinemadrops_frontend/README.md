@@ -58,4 +58,8 @@ bash remove_features.sh --dry-run
 ## Variables de entorno
 - REACT_APP_API_BASE — Base URL del backend REST (requerido)
 
+Descubrir/Discover:
+- La página Discover usa un endpoint GET para listar videos que viven en S3. Se asume por defecto `/api/videos` en el frontend.
+- Por favor, confirma el path real del backend y su forma de respuesta. Una vez confirmado, actualiza `API_VIDEOS_PATH` en `src/pages/Discover.jsx` si difiere.
+
 No uses secretos reales en el repo; utiliza `.env` locales o variables de entorno en despliegue.
