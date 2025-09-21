@@ -197,11 +197,16 @@ export default function FilmDetails() {
   };
 
   // Local-only reactions counters (no backend persistence yet)
+  // DEMO NOTE: Initialize with random values to simulate organic activity for presentation purposes.
+  // These are mock values only and are NOT persisted to any backend.
+  const randomBetween = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+
   const [reactions, setReactions] = useState(() => ({
-    dislike: 0,
-    like: film?.likes ? Math.max(0, Number(film.likes) || 0) : 0,
-    love: 0,
-    lifeChanging: 0,
+    dislike: randomBetween(1, 1000),
+    // Start "like" with either the film's existing likes (if provided) or a random demo value.
+    like: film?.likes ? Math.max(0, Number(film.likes) || 0) : randomBetween(1, 1000),
+    love: randomBetween(1, 1000),
+    lifeChanging: randomBetween(1, 1000),
   }));
   // Track which reaction is currently active for this user locally
   const [activeReaction, setActiveReaction] = useState(null); // 'dislike' | 'like' | 'love' | 'lifeChanging' | null
