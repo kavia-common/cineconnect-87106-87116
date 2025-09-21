@@ -15,6 +15,14 @@ Cinemadrops is a playful, community-driven platform for short films. This fronte
 - socket.io-client for real-time features
 - No heavy UI framework; handcrafted playful CSS
 
+## Static cover images
+
+- Cover images used by the film cards and creator profiles are served from the CRA `public/assets` directory.
+- Make sure any images you want to use are placed at: `cinemadrops_frontend/public/assets/`
+- In code, always reference them with absolute paths like:
+  - `<img src="/assets/pexels-alvarobalderas-20747775.jpg" alt="..." />`
+- See `src/assets/images.js` which exports absolute URLs for existing demo images.
+
 ## Run locally
 1) Copy environment config
 ```
