@@ -26,6 +26,13 @@ export default function Home() {
   const discoverOptions = ['For you', 'New', 'Rising', 'Awarded', 'Trending'];
   const tags = ['Drama', 'Comedy', 'Sci-Fi', 'Documentary', 'Animation', 'Horror', 'Experimental'];
 
+  // Centralize and deduplicate discover tags to ensure they render only once
+  const discoverTags = React.useMemo(() => {
+    const base = ['#behindthescenes', '#script', '#newvoices', '#award', '#festival'];
+    // In case future logic merges multiple arrays, keep uniqueness
+    return Array.from(new Set(base));
+  }, []);
+
   // Close on outside click/escape
   React.useEffect(() => {
     const onDocClick = (e) => {
@@ -206,7 +213,7 @@ export default function Home() {
           <strong>Discover tags</strong>
           <div style={{ height: 8 }} />
           <div className="row" style={{ flexWrap: 'wrap' }}>
-            {['#behindthescenes', '#script', '#newvoices', '#award', '#festival'].map(h => (
+            {discoverTags.map((h) => (
               <button
                 key={h}
                 className="pill chip"
