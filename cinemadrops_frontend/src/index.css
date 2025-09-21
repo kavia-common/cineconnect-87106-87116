@@ -171,6 +171,27 @@ img { max-width: 100%; display: block; }
   /* external spacing between cards */
   gap: 24px;
 }
+
+/* Discover section: padding for the overall grid block */
+.discover-section {
+  /* playful, comfy spacing around the whole grid */
+  padding: 20px;
+  border-radius: var(--cd-radius);
+}
+
+/* Slightly larger padding on wider screens */
+@media (min-width: 900px) {
+  .discover-section {
+    padding: 24px;
+  }
+}
+
+/* Compact yet comfy on small screens */
+@media (max-width: 700px) {
+  .discover-section {
+    padding: 16px;
+  }
+}
 @media (max-width: 1100px) {
   .film-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }

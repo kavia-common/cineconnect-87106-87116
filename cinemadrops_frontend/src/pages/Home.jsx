@@ -21,10 +21,11 @@ export default function Home() {
         <span className="pill">Awarded</span>
       </div>
 
-
-
-      <div className="film-grid">
-        {films.map(f => <FilmCard key={f.id} film={f} />)}
+      {/* Section wrapper to give the entire grid block uniform breathing room */}
+      <div className="discover-section card section">
+        <div className="film-grid">
+          {films.map(f => <FilmCard key={f.id} film={f} />)}
+        </div>
       </div>
     </div>
   );
