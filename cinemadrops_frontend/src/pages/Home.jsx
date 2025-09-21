@@ -2,6 +2,7 @@ import React from 'react';
 import { useApi } from '../services/Api';
 import FilmCard from '../components/FilmCard';
 import { getCoverByIndex } from '../assets/images';
+import QuickPicks from '../components/QuickPicks';
 
 /**
  * PUBLIC_INTERFACE
@@ -202,7 +203,7 @@ export default function Home() {
         </section>
 
         <aside aria-label="Quick tags and promos" className="card section">
-          <strong>Quick Picks</strong>
+          <strong>Discover tags</strong>
           <div style={{ height: 8 }} />
           <div className="row" style={{ flexWrap: 'wrap' }}>
             {['#behindthescenes', '#script', '#newvoices', '#award', '#festival'].map(h => (
@@ -228,6 +229,7 @@ export default function Home() {
           </div>
         </aside>
       </div>
+      <QuickPicks films={films} />
     </div>
   );
 }

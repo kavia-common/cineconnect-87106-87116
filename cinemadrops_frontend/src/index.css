@@ -121,53 +121,95 @@ img { max-width: 100%; display: block; }
 .sidebar .section { padding: 12px; }
 
 /* Film grid */
-/* Make thumbnails significantly larger by reducing columns and increasing spans. Maintain a playful rhythm with responsive steps. */
+/* Make thumbnails even larger, with responsive 2-column max layout on main content.
+   Use fewer grid columns and wider spans. */
 .film-grid {
   display: grid;
-  grid-template-columns: repeat(8, 1fr); /* fewer columns -> bigger cards */
-  gap: 18px;
+  grid-template-columns: repeat(6, 1fr); /* big base cells */
+  gap: 20px;
 }
 
-/* Large desktops: comfortable 3 cards per row (each spans 8/3 ≈ 2.66 -> use span 3) */
+/* Large desktops: 2 big cards per row (span 3 of 6) */
 .film-card { grid-column: span 3; overflow: hidden; display: flex; flex-direction: column; }
 
-/* Medium desktops/tablets: 2 cards per row */
-@media (max-width: 1200px) {
+/* Medium screens: still 2 per row (span 3 of 6) keeps size generous */
+@media (max-width: 1280px) {
   .film-grid { grid-template-columns: repeat(6, 1fr); }
   .film-card { grid-column: span 3; }
 }
 
-/* Tablets / large phones: 2 larger cards per row */
-@media (max-width: 900px) {
+/* Tablets: 2 per row (span 2 of 4) */
+@media (max-width: 980px) {
   .film-grid { grid-template-columns: repeat(4, 1fr); }
   .film-card { grid-column: span 2; }
 }
 
-/* Small phones: single-column big hero-like cards */
-@media (max-width: 580px) {
+/* Small phones: single-column hero cards (span 2 of 2) */
+@media (max-width: 620px) {
   .film-grid { grid-template-columns: repeat(2, 1fr); }
   .film-card { grid-column: span 2; }
 }
 
-/* Film card visuals */
+/* Film card visuals: Slightly taller aspect ratio to feel more cinematic in grid */
 .film-thumb {
-  aspect-ratio: 16/9;
+  aspect-ratio: 21/9; /* wider, more cinematic */
   background: #eef6f7;
   position: relative;
   border-bottom-left-radius: var(--cd-radius);
   border-bottom-right-radius: var(--cd-radius);
 }
 
-/* Discover two-column layout (desktop) and single-column (mobile) */
+/* Discover two-column layout (desktop) and single-column (mobile).
+   Keep sidebar narrower to let main grid breathe. */
 .discover-layout {
   display: grid;
-  grid-template-columns: 2fr 1fr; /* two columns on desktop */
-  gap: 16px;
+  grid-template-columns: 3fr 1.2fr; /* emphasize main content */
+  gap: 20px;
 }
-@media (max-width: 900px) {
+@media (max-width: 980px) {
   .discover-layout {
-    grid-template-columns: 1fr; /* single column on mobile/tablets */
+    grid-template-columns: 1fr;
   }
+}
+
+/* Floating Quick Picks button and drawer styles */
+.quick-picks-fab {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 70;
+  background: var(--cd-secondary);
+  color: #3a2f58;
+  border: 2px solid #ffd88a;
+  border-radius: 999px;
+  padding: 12px 16px;
+  font-weight: 900;
+  box-shadow: 0 14px 36px rgba(255,182,39,.35);
+}
+.quick-picks-fab:hover { transform: translateY(-2px); }
+
+.quick-picks-drawer {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  width: min(420px, 100%);
+  max-height: 70%;
+  background: var(--cd-surface);
+  border-left: 1px solid var(--cd-border);
+  border-top: 1px solid var(--cd-border);
+  box-shadow: -10px 0 30px rgba(0,0,0,.12), 0 -10px 30px rgba(0,0,0,.08);
+  border-top-left-radius: 16px;
+  transform: translateY(110%);
+  transition: transform .25s ease;
+  z-index: 80;
+  display: flex;
+  flex-direction: column;
+}
+.quick-picks-drawer.open { transform: translateY(0); }
+.quick-picks-header { padding: 12px 14px; border-bottom: 1px solid var(--cd-border); display: flex; align-items: center; gap: 10px; }
+.quick-picks-body { padding: 12px; overflow: auto; display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+@media (max-width: 520px) {
+  .quick-picks-body { grid-template-columns: 1fr; }
 }
 
 /* Dropdown menus */
