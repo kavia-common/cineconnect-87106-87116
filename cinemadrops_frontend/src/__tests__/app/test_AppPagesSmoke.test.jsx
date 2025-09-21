@@ -2,7 +2,6 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { ApiProvider } from '../../services/Api';
-import { SocketProvider } from '../../services/Socket';
 import Home from '../../pages/Home';
 import Curated from '../../pages/Curated';
 import Challenges from '../../pages/Challenges';
@@ -14,11 +13,9 @@ test('route: / renders Home', () => {
   render(
     <MemoryRouter initialEntries={['/']}>
       <ApiProvider>
-        <SocketProvider>
-          <Routes>
-            <Route path="/" element={<Home />} />
-          </Routes>
-        </SocketProvider>
+        <Routes>
+          <Route path="/" element={<Home />} />
+        </Routes>
       </ApiProvider>
     </MemoryRouter>
   );
@@ -64,11 +61,9 @@ test('route: /film/:id renders FilmDetails', () => {
   render(
     <MemoryRouter initialEntries={['/film/1']}>
       <ApiProvider>
-        <SocketProvider>
-          <Routes>
-            <Route path="/film/:id" element={<FilmDetails />} />
-          </Routes>
-        </SocketProvider>
+        <Routes>
+          <Route path="/film/:id" element={<FilmDetails />} />
+        </Routes>
       </ApiProvider>
     </MemoryRouter>
   );

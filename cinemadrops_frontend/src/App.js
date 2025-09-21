@@ -1,8 +1,7 @@
-import React, { useMemo, useState } from 'react';
+import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import './index.css';
 import { ApiProvider } from './services/Api';
-import { SocketProvider } from './services/Socket';
 import { AuthProvider } from './services/Auth';
 import { ThemeProvider } from './services/Theme';
 import TopNav from './components/TopNav';
@@ -15,62 +14,41 @@ import Forums from './pages/Forums';
 import Challenges from './pages/Challenges';
 import Curated from './pages/Curated';
 import NotFound from './pages/NotFound';
-import ChatDrawer from './drawers/ChatDrawer';
-import NotificationsDrawer from './drawers/NotificationsDrawer';
-import QuickActionsDrawer from './drawers/QuickActionsDrawer';
 import Profile from './pages/Profile';
 import Upload from './pages/Upload';
 
 // PUBLIC_INTERFACE
 function App() {
-  /** Root state for drawers */
-  const [openDrawer, setOpenDrawer] = useState(null); // 'chat' | 'notif' | 'quick' | null
-
-  const drawerApi = useMemo(() => ({
-    open: (name) => setOpenDrawer(name),
-    close: () => setOpenDrawer(null),
-    isOpen: (name) => openDrawer === name
-  }), [openDrawer]);
-
+  /** App sin chat/notifications/quick drawers */
   return (
     <BrowserRouter>
       <ThemeProvider>
         <ApiProvider>
           <AuthProvider>
-            <SocketProvider>
-              <div className="app-shell">
-                <TopNav
-                  onOpenChat={() => setOpenDrawer('chat')}
-                  onOpenNotifications={() => setOpenDrawer('notif')}
-                  onOpenQuick={() => setOpenDrawer('quick')}
-                />
-                <div className="main-grid container">
-                  <aside className="sidebar">
-                    <LeftSidebar />
-                  </aside>
-                  <main>
-                    <Routes>
-                      <Route path="/" element={<Home />} />
-                      <Route path="/film/:id" element={<FilmDetails />} />
-                      <Route path="/creator/:id" element={<CreatorProfile />} />
-                      <Route path="/forums/*" element={<Forums />} />
-                      <Route path="/challenges" element={<Challenges />} />
-                      <Route path="/curated" element={<Curated />} />
-                      <Route path="/perfil" element={<Profile />} />
-                      <Route path="/subir" element={<Upload />} />
-                      <Route path="*" element={<NotFound />} />
-                    </Routes>
-                  </main>
-                  <aside className="rightbar">
-                    <RightSidebar />
-                  </aside>
-                </div>
-
-                <ChatDrawer open={drawerApi.isOpen('chat')} onClose={drawerApi.close} />
-                <NotificationsDrawer open={drawerApi.isOpen('notif')} onClose={drawerApi.close} />
-                <QuickActionsDrawer open={drawerApi.isOpen('quick')} onClose={drawerApi.close} />
+            <div className="app-shell">
+              <TopNav />
+              <div className="main-grid container">
+                <aside className="sidebar">
+                  <LeftSidebar />
+                </aside>
+                <main>
+                  <Routes>
+                    <Route path="/" element={<Home />} />
+                    <Route path="/film/:id" element={<FilmDetails />} />
+                    <Route path="/creator/:id" element={<CreatorProfile />} />
+                    <Route path="/forums/*" element={<Forums />} />
+                    <Route path="/challenges" element={<Challenges />} />
+                    <Route path="/curated" element={<Curated />} />
+                    <Route path="/perfil" element={<Profile />} />
+                    <Route path="/subir" element={<Upload />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </main>
+                <aside className="rightbar">
+                  <RightSidebar />
+                </aside>
               </div>
-            </SocketProvider>
+            </div>
           </AuthProvider>
         </ApiProvider>
       </ThemeProvider>

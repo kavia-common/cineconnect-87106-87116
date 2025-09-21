@@ -4,9 +4,9 @@ import { useTheme } from '../services/Theme';
 
 /**
  * PUBLIC_INTERFACE
- * TopNav renders the top navigation bar with brand, search, and quick actions.
+ * TopNav renders the top navigation bar with brand, search, and navigation links.
  */
-export default function TopNav({ onOpenChat, onOpenNotifications, onOpenQuick }) {
+export default function TopNav() {
   const { isDark, toggleTheme } = useTheme();
 
   return (
@@ -36,9 +36,6 @@ export default function TopNav({ onOpenChat, onOpenNotifications, onOpenQuick })
         >
           {isDark ? '🌙 Oscuro' : '☀️ Claro'}
         </button>
-        <button className="btn secondary" onClick={onOpenQuick} aria-label="Acciones rápidas">⚡ Rápido</button>
-        <button className="btn" onClick={onOpenChat} aria-label="Abrir chat">💬 Chat</button>
-        <button className="btn" onClick={onOpenNotifications} aria-label="Abrir notificaciones">🔔</button>
       </div>
     </div>
   );

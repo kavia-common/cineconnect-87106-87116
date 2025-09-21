@@ -213,15 +213,7 @@ img { max-width: 100%; display: block; }
 /* Rightbar */
 .rightbar { display: flex; flex-direction: column; gap: 16px; }
 
-/* Drawers */
-.drawer {
-  position: fixed; top: 0; right: 0; width: min(420px, 100%); height: 100%; background: var(--cd-surface);
-  box-shadow: -10px 0 30px rgba(0,0,0,.12); border-left: 1px solid var(--cd-border);
-  transform: translateX(100%); transition: transform .25s ease; z-index: 60; display: flex; flex-direction: column;
-}
-.drawer.open { transform: translateX(0); }
-.drawer-header { padding: 14px 16px; border-bottom: 1px solid var(--cd-border); display: flex; align-items: center; justify-content: space-between; }
-.drawer-body { flex: 1; overflow: auto; padding: 16px; }
+/* (Removed drawer styles: chat/notifications/quick drawers have been deleted) */
 
 /* Utilities */
 .row { display: flex; align-items: center; gap: 10px; }

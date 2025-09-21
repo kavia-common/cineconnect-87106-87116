@@ -1,65 +1,58 @@
 # Cinemadrops Frontend (React)
 
-Cinemadrops is a playful, community-driven platform for short films. This frontend implements:
-- Discovery feed and curated lists
-- Detailed film pages with behind-the-scenes and scripts
-- Creator profiles
-- Comments and forums
-- Weekly challenges
-- Live chat and real-time notifications via WebSockets
-- Responsive multi-column layout with top navigation, sidebars, and modal drawers
+Cinemadrops es una plataforma lúdica y colaborativa para cortometrajes. Este frontend implementa:
+- Feed de descubrimiento y listas curadas
+- Páginas detalladas de películas con “behind the scenes” y scripts
+- Perfiles de creadores
+- Comentarios y foros
+- Retos semanales
+- Layout responsive con navegación superior, sidebars y una cuadrícula principal
+
+Estado actual: se ha eliminado la funcionalidad de chat en vivo y notificaciones en tiempo real.
 
 ## Tech
 - React 18 + React Router v6
-- SWR for data fetching
-- socket.io-client for real-time features
-- No heavy UI framework; handcrafted playful CSS
+- SWR para fetching
+- CSS artesanal (sin framework pesado)
 
-## Run locally
-1) Copy environment config
+## Ejecutar localmente
+1) Copia la configuración de entorno
 ```
 cp .env.example .env
 ```
-2) Edit `.env` and set:
+2) Edita `.env` y define:
 ```
 REACT_APP_API_BASE=http://localhost:4000
-REACT_APP_WS_BASE=ws://localhost:4000
 ```
-3) Install and start
+3) Instala y arranca
 ```
 npm install
 npm start
 ```
 
-Open http://localhost:3000
+Abre http://localhost:3000
 
-Note: This UI expects a REST API and WebSocket server. If none is available, demo fallback data is shown and sockets will simply connect without guaranteed events.
+## Estructura del proyecto
+- src/services/Api.js — helpers de API y SWR
+- src/components/* — Componentes reutilizables (TopNav, Sidebars, FilmCard, Comments)
+- src/pages/* — Páginas de rutas (Home, FilmDetails, CreatorProfile, Forums, Challenges, Curated)
+- src/index.css — Estilos del tema
 
-## Project Structure
-- src/services/Api.js — API helpers and SWR
-- src/services/Socket.js — WebSocket provider
-- src/components/* — Reusable UI components (TopNav, Sidebars, FilmCard, Comments)
-- src/pages/* — Route pages (Home, FilmDetails, CreatorProfile, Forums, Challenges, Curated)
-- src/drawers/* — Chat, Notifications, Quick Actions
-- src/index.css — Playful theme styles per style guide
+Se han removido:
+- src/drawers/* — Chat, Notificaciones, Quick Actions
+- src/services/Socket.js — Proveedor de WebSocket
 
-## Style Guide
-Colors (from styleThemeData):
-- Primary: #0FA3B1
-- Secondary/Success: #FFB627
-- Error: #ED6A5A
-- Background: #F7F9F9
-- Surface: #FFFFFF
-- Text: #2F4858
+## Script de limpieza
+Para borrar los archivos de chat/notificaciones en otros entornos o ramas:
+```
+bash remove_features.sh
+```
+Opcionalmente, puedes ejecutar primero en modo dry run:
+```
+bash remove_features.sh --dry-run
+```
 
-Layout:
-- Top navigation bar
-- Left filters and right trending sidebars
-- Main content area
-- Modal drawers for chat, notifications, and quick actions
+## Variables de entorno
+- REACT_APP_API_BASE — Base URL del backend REST (requerido)
 
-## Environment Variables
-- REACT_APP_API_BASE — Base URL for REST (required)
-- REACT_APP_WS_BASE — Base URL for WebSockets (required)
-
-Do not commit real secrets; use `.env` locally and deployment env vars in production.
+No uses secretos reales en el repo; utiliza `.env` locales o variables de entorno en despliegue.
