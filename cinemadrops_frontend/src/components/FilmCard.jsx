@@ -1,16 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 /**
  * PUBLIC_INTERFACE
  * FilmCard renders a short film card with playful style.
- * Soporta mostrar una imagen de portada si está disponible en:
+ * Supports showing a cover/thumbnail image if available in:
  *  cover_image | cover | coverUrl | thumbnail | thumbnailUrl | poster.
- * Si no hay portada, se muestra un placeholder por defecto con el gradiente del tema.
+ * If none is available, it shows a placeholder image or a themed gradient.
  */
-export default function FilmCard({ film }) {
-  // Normaliza los posibles campos de asset para portada
-  const cover =
+export default function FilmCard({ film, placeholderImage }) {
+  // Normalize possible asset fields for cover/thumbnail
+  const normalizedCover =
     film?.cover_image ||
     film?.cover ||
     film?.coverUrl ||
@@ -19,7 +19,9 @@ export default function FilmCard({ film }) {
     film?.poster ||
     null;
 
-  // Imagen por defecto/placeholder: usamos un bloque con el gradiente del tema para mantener el estilo
+  const [imgError, setImgError] = useState(false);
+
+  // Placeholder content if we cannot render any image
   const Placeholder = (
     <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center' }}>
       <div
@@ -35,6 +37,43 @@ export default function FilmCard({ film }) {
     </div>
   );
 
+  const renderImage = () => {
+    // If we have a valid normalized cover and no error, show it
+    if (normalizedCover && !imgError) {
+      return (
+        <img
+          src={normalizedCover}
+          alt={`Portada de ${film.title}`}
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          onError={() => setImgError(true)}
+        />
+      );
+    }
+
+    // If cover failed or is missing, try provided placeholder image
+    if (placeholderImage) {
+      return (
+        <img
+          src={placeholderImage}
+          alt={`Portada alternativa de ${film.title}`}
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          onError={(e) => {
+            // If even the placeholder fails, hide it and revert to gradient
+            e.currentTarget.style.display = 'none';
+          }}
+        />
+      );
+    }
+
+    // No image available, show gradient with "Sin miniatura"
+    return (
+      <>
+        <div style={{ position: 'absolute', inset: 0, background: 'var(--cd-gradient)' }} />
+        {Placeholder}
+      </>
+    );
+  };
+
   return (
     <Link to={`/film/${film.id}`} className="card film-card" style={{ textDecoration: 'none' }}>
       <div
@@ -42,27 +81,7 @@ export default function FilmCard({ film }) {
         style={{ position: 'relative', background: 'var(--cd-bg)' }}
         aria-label={`Tarjeta de video ${film.title}`}
       >
-        {/* Portada desde assets si existe; si falla la carga, caemos al placeholder */}
-        {cover ? (
-          <img
-            src={cover}
-            alt={`Portada de ${film.title}`}
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-            onError={(e) => {
-              // Fallback visual si la URL no carga
-              e.currentTarget.style.display = 'none';
-              const parent = e.currentTarget.parentElement;
-              if (parent) {
-                parent.style.background = 'var(--cd-gradient)';
-              }
-            }}
-          />
-        ) : (
-          <>
-            <div style={{ position: 'absolute', inset: 0, background: 'var(--cd-gradient)' }} />
-            {Placeholder}
-          </>
-        )}
+        {renderImage()}
         <div className="badge">★ {film.likes} • ⏱ {film.duration}m</div>
       </div>
       <div className="film-meta">

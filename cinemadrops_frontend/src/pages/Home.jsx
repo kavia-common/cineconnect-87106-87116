@@ -43,6 +43,9 @@ export default function Home() {
     });
   }, [films, duration, activeTags]);
 
+  // Choose a default placeholder image from packaged assets
+  const defaultPlaceholder = '/assets/pexels-amar-29656074.jpg';
+
   return (
     <div className="page-home">
       <div className="row" style={{ marginBottom: 12 }}>
@@ -99,19 +102,83 @@ export default function Home() {
       <div style={{ height: 12 }} />
 
       <div className="film-grid">
-        {filtered.map(f => <FilmCard key={f.id} film={f} />)}
+        {filtered.map(f => (
+          <FilmCard
+            key={f.id}
+            film={f}
+            // Provide a fallback placeholder image from assets if the film lacks a cover
+            placeholderImage={defaultPlaceholder}
+          />
+        ))}
       </div>
     </div>
   );
 }
 
+// Demo films now include asset images for thumbnails/covers to showcase Discover previews.
 const demoFilms = [
-  { id: '1', title: 'Paper Boats', author: 'Liu Chen', likes: 312, duration: 7 },
-  { id: '2', title: 'Under Neon', author: 'Samir Khan', likes: 922, duration: 12 },
-  { id: '3', title: 'Glass Orchard', author: 'Ivy Gomez', likes: 154, duration: 5 },
-  { id: '4', title: 'Tides', author: 'Mika Ito', likes: 708, duration: 9 },
-  { id: '5', title: 'Static', author: 'Jon Ruiz', likes: 421, duration: 15 },
-  { id: '6', title: 'Driftwood', author: 'R. Okoye', likes: 267, duration: 8 },
-  { id: '7', title: 'Echo Street', author: 'Sara Ali', likes: 581, duration: 6 },
-  { id: '8', title: 'Dust to Light', author: 'Ana Costa', likes: 835, duration: 14 },
+  {
+    id: '1',
+    title: 'Paper Boats',
+    author: 'Liu Chen',
+    likes: 312,
+    duration: 7,
+    thumbnail: '/assets/pexels-jillyjillystudio-33962662.jpg'
+  },
+  {
+    id: '2',
+    title: 'Under Neon',
+    author: 'Samir Khan',
+    likes: 922,
+    duration: 12,
+    cover: '/assets/pexels-delot-29721171.jpg'
+  },
+  {
+    id: '3',
+    title: 'Glass Orchard',
+    author: 'Ivy Gomez',
+    likes: 154,
+    duration: 5,
+    coverUrl: '/assets/pexels-andreas-schnabl-1775843-19321355.jpg'
+  },
+  {
+    id: '4',
+    title: 'Tides',
+    author: 'Mika Ito',
+    likes: 708,
+    duration: 9,
+    poster: '/assets/pexels-chriszwettler-9407824.jpg'
+  },
+  {
+    id: '5',
+    title: 'Static',
+    author: 'Jon Ruiz',
+    likes: 421,
+    duration: 15,
+    thumbnailUrl: '/assets/pexels-alvarobalderas-20747775.jpg'
+  },
+  {
+    id: '6',
+    title: 'Driftwood',
+    author: 'R. Okoye',
+    likes: 267,
+    duration: 8,
+    // intentionally no image to exercise placeholder
+  },
+  {
+    id: '7',
+    title: 'Echo Street',
+    author: 'Sara Ali',
+    likes: 581,
+    duration: 6,
+    cover_image: '/assets/pexels-kalistro666-29263909.jpg'
+  },
+  {
+    id: '8',
+    title: 'Dust to Light',
+    author: 'Ana Costa',
+    likes: 835,
+    duration: 14,
+    thumbnail: '/assets/pexels-guillermo-berlin-1524368912-30068229.jpg'
+  },
 ];
