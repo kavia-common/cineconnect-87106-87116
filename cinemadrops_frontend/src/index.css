@@ -99,6 +99,35 @@ img { max-width: 100%; display: block; }
   transition: background-color .25s ease, color .2s ease, border-color .2s ease;
 }
 
+/* Provide default internal padding area for typical content cards */
+.card.section {
+  padding: 16px;
+}
+
+/* Film card: ensure internal padding around meta content for breathing room */
+.film-card {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  border-radius: calc(var(--cd-radius));
+  padding: 12px; /* new internal padding around the whole card */
+}
+
+/* Keep the large, immersive thumbnail full-bleed within the card's inner padding */
+.film-thumb {
+  /* Increase height for more cinematic impact */
+  aspect-ratio: 16/7.5;
+  background: #eef6f7;
+  position: relative;
+  border-radius: 10px; /* soften edges inside the padded card */
+  overflow: hidden;
+}
+
+/* Meta info area retains spacing; adjust to align with new card padding */
+.film-meta { padding: 12px 4px 4px; display: grid; gap: 8px; }
+.film-title { font-weight: 800; font-size: 1.18rem; }
+.film-author { color: var(--cd-muted); font-size: 14px; }
+
 /* Layout */
 .app-shell {
   display: grid;
