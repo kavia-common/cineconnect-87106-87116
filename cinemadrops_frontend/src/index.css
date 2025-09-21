@@ -261,6 +261,16 @@ img { max-width: 100%; display: block; }
 /* Rightbar */
 .rightbar { display: flex; flex-direction: column; gap: 16px; }
 
+/* FilmDetails hero play button responsive size helper (targets inline-styled button via container context) */
+@media (max-width: 640px) {
+  .page-film .card > div[aria-label="Cover image"] > button {
+    width: 72px !important;
+    height: 72px !important;
+    font-size: 18px !important;
+    border-width: 2px !important;
+  }
+}
+
 /* (Removed drawer styles: chat/notifications/quick drawers have been deleted) */
 
 /* Utilities */

@@ -306,7 +306,77 @@ export default function FilmDetails() {
   return (
     <div className="page-film">
       <div className="card" style={compactCard} aria-label={`Detalle del corto ${film.title}`}>
-        <div style={compactHeader} aria-hidden="true" />
+        {/* Hero cover with centered Play button overlay */}
+        <div
+          style={{
+            ...compactHeader,
+            position: 'relative',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            overflow: 'hidden',
+          }}
+          aria-label="Cover image"
+        >
+          <button
+            type="button"
+            onClick={handlePlay}
+            disabled={playLoading}
+            aria-label="Reproducir cortometraje"
+            title="Play"
+            style={{
+              position: 'absolute',
+              zIndex: 2,
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+              width: 88,
+              height: 88,
+              borderRadius: '999px',
+              border: '3px solid rgba(255,255,255,.9)',
+              background:
+                'radial-gradient(120px 60px at 0% 0%, rgba(255,182,39,0.3), transparent 70%), var(--cd-primary)',
+              color: '#fff',
+              fontWeight: 900,
+              fontSize: 20,
+              boxShadow: '0 20px 50px rgba(0,0,0,.35), 0 8px 22px rgba(15,163,177,.35)',
+              cursor: playLoading ? 'default' : 'pointer',
+              transform: 'translateZ(0)',
+              transition: 'transform .15s ease, box-shadow .2s ease, filter .2s ease, opacity .2s ease',
+              outline: 'none',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'scale(1.04)';
+              e.currentTarget.style.boxShadow = '0 24px 60px rgba(0,0,0,.38), 0 10px 26px rgba(255,182,39,.30)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'scale(1.0)';
+              e.currentTarget.style.boxShadow = '0 20px 50px rgba(0,0,0,.35), 0 8px 22px rgba(15,163,177,.35)';
+            }}
+            onFocus={(e) => {
+              e.currentTarget.style.boxShadow = '0 0 0 4px rgba(255,255,255,.6), 0 12px 30px rgba(0,0,0,.35)';
+            }}
+            onBlur={(e) => {
+              e.currentTarget.style.boxShadow = '0 20px 50px rgba(0,0,0,.35), 0 8px 22px rgba(15,163,177,.35)';
+            }}
+          >
+            {playLoading ? '…' : '▶'}
+          </button>
+
+          {/* Optional decorative overlay to ensure contrast on any background */}
+          <div
+            aria-hidden="true"
+            style={{
+              position: 'absolute',
+              inset: 0,
+              background: 'linear-gradient(180deg, rgba(0,0,0,.25) 0%, rgba(0,0,0,.35) 100%)',
+              pointerEvents: 'none',
+              zIndex: 1,
+            }}
+          />
+        </div>
+
         <div style={{ padding: 14 }}>
           <h2 style={{ margin: '6px 0', fontSize: '1.15rem', lineHeight: 1.3 }}>{film.title}</h2>
           <div className="row" style={metaRow}>
@@ -326,19 +396,9 @@ export default function FilmDetails() {
 
           <p className="muted" style={{ marginTop: 8, fontSize: 14, lineHeight: 1.45 }}>{film.description}</p>
 
-          {/* --- Inline player controls --- */}
+          {/* Inline player status after clicking Play */}
           <div style={{ height: 10 }} />
           <div className="row" style={{ gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-            <button
-              type="button"
-              className="btn"
-              onClick={handlePlay}
-              disabled={playLoading}
-              aria-label="Play this short film"
-              title="Play"
-            >
-              {playLoading ? 'Loading…' : '▶ Play'}
-            </button>
             {playLoading && <span className="muted" role="status">Fetching video...</span>}
             {playError && (
               <span className="pill" role="alert" style={{ borderColor: 'var(--cd-error)', color: 'var(--cd-text)' }}>
@@ -347,9 +407,7 @@ export default function FilmDetails() {
             )}
           </div>
 
-          {/* Video player appears after we have a source.
-              Note: the Play button above triggers the GET /videos_shortfilms/{filename}?include_content=true
-              and sets videoSrc here. */}
+          {/* Video player appears after we have a source */}
           {videoSrc ? (
             <>
               <div style={{ height: 10 }} />
