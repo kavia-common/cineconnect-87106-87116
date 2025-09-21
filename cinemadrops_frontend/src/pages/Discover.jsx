@@ -198,16 +198,9 @@ export default function Discover() {
   ];
   const defaultPlaceholder = assetGallery[0];
 
-  const pickPreviewImage = (film, index) => {
-    const img = film.cover ||
-               film.cover_image ||
-               film.coverUrl ||
-               film.thumbnail ||
-               film.thumbnailUrl ||
-               film.poster ||
-               null;
-    
-    if (img) return getAssetUrl(img);
+  // Always use local asset images for previews, cycling through the gallery.
+  // We intentionally ignore any thumbnail/cover fields returned by the API.
+  const pickPreviewImage = (_film, index) => {
     if (assetGallery.length === 0) return defaultPlaceholder;
     return assetGallery[index % assetGallery.length];
   };
