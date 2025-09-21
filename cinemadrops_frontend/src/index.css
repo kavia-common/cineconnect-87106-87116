@@ -164,6 +164,11 @@ img { max-width: 100%; display: block; }
   .sidebar .section .pill[aria-expanded] {
     padding: 6px 10px;
   }
+  /* Compact filter chips on small screens */
+  .card.section .pill[aria-pressed] {
+    padding: 6px 10px;
+    font-size: 13px;
+  }
 }
 
 /* Film grid
