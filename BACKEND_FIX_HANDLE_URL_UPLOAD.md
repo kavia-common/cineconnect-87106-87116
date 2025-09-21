@@ -374,6 +374,12 @@ def handle_url_upload(event, context):
     prefix = params["prefix"]
     expiration = params["expiration"]
 
+    # Inicializaciones defensivas para evitar NameError si ocurre un error temprano.
+    s3 = None
+    key = None
+    cl_int = None
+    result = None
+
     # HEAD para inspeccionar Content-Length (si disponible)
     with _requests_session() as sess:
         try:
@@ -398,8 +404,12 @@ def handle_url_upload(event, context):
             return _json(502, {"error": f"GET request failed: {str(e)}"})
 
         # Preparar S3
-        s3 = _s3_client()
-        key = _build_s3_key(filename, prefix)
+        try:
+            s3 = _s3_client()
+            key = _build_s3_key(filename, prefix)
+        except Exception as e:
+            # Si fallara la creación del cliente o la key, devolver 500 con detalle y no continuar.
+            return _json(500, {"error": f"S3 client initialization failed: {str(e)}"})
 
         # Elegir modo de carga: si tamaño desconocido o grande, multipart
         # Regla simple: usar multipart si cl_int es None o cl_int >= 8MB
@@ -426,6 +436,10 @@ def handle_url_upload(event, context):
             return _json(502, {"error": f"S3 upload failed: {str(ce)}"})
         except Exception as e:
             return _json(500, {"error": f"Upload failed: {str(e)}"})
+
+    # Si por alguna razón no se produjo subida (result es None), devolvemos error genérico controlado.
+    if result is None or s3 is None or key is None:
+        return _json(500, {"error": "Upload did not complete"})
 
     # Presign de lectura opcional (útil para devolver un link temporal del archivo subido)
     read_url = None
@@ -491,3 +505,6 @@ def lambda_handler(event, context):
 - Descarga en streaming con control de `max_size_bytes` durante la lectura para evitar exceder límites si el servidor no entrega `Content-Length`.
 - Manejo de errores coherente con códigos 4xx/5xx y mensajes claros.
 - Sin funciones duplicadas: un único set de helpers para coerción, parsing y carga.
+
+### Nota de diagnóstico para "Internal Server Error" (500)
+Si ve en API Gateway la respuesta genérica `{"message":"Internal Server Error"}`, revise CloudWatch Logs. Antes de este parche, era posible que se lanzara un `NameError/UnboundLocalError` por variables no inicializadas (`s3`, `key`, `result`, `cl_int`) usadas fuera del bloque `with` cuando una rama de error ocurría dentro. Este parche inicializa defensivamente estas variables y evita el uso posterior si la carga no se completó, devolviendo un error controlado con JSON. Además, asegúrese de definir `S3_BUCKET`, `AWS_REGION`/`AWS_DEFAULT_REGION` en el entorno de Lambda.
