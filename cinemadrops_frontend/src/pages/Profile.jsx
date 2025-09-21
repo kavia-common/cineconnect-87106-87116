@@ -1,343 +1,153 @@
-import React, { useMemo, useState } from 'react';
-import dayjs from 'dayjs';
-import { useApi } from '../services/Api';
-import { useAuth } from '../services/Auth';
+import React from 'react';
 
 /**
  * PUBLIC_INTERFACE
- * Profile displays the authenticated user's profile page with:
- * - User banner (avatar, name, bio)
- * - Social stats (followers, following, uploads)
- * - Tabs: Uploads and Liked (liked is a placeholder until backend is wired)
- * - Recent uploads gallery with playful style
- * - Video spotlight modal
- * All labels and UI strings are in English.
+ * Profile mockup page showing:
+ * - Mock avatar
+ * - User name
+ * - Short bio/description
+ * - Following section (count and sample list)
+ * - Grid of user's short films (mock data)
+ * This version uses only hardcoded demo data and is visually playful and modern.
  */
 export default function Profile() {
-  const { useFetch } = useApi();
-  const { user, isAuthenticated, authChecked } = useAuth();
-  const [spotlight, setSpotlight] = useState(null); // { id, title, url, ... } | null
-  const [activeTab, setActiveTab] = useState('uploads'); // 'uploads' | 'liked'
+  // Demo/mock user data
+  const user = {
+    name: 'Jamie Rivers',
+    username: '@jamier',
+    bio: 'Storyteller. Cutting small moments into big feelings. Lover of neon lights and rainy nights.',
+    avatarEmoji: '🎬',
+    followers: 2_340,
+    following: 187,
+    followingList: [
+      { id: 'u1', name: 'Ava Reynolds' },
+      { id: 'u2', name: 'Leo Park' },
+      { id: 'u3', name: 'Nora Patel' },
+      { id: 'u4', name: 'Yuki Tanaka' },
+      { id: 'u5', name: 'Sam Okafor' },
+    ],
+  };
 
-  // Always compute identifiers to keep hooks order
-  const userId = user?.id;
-  const email = user?.email;
-  const query = userId
-    ? `?authorId=${encodeURIComponent(userId)}`
-    : (email ? `?email=${encodeURIComponent(email)}` : '');
+  // Demo/mock films
+  const films = [
+    { id: 'f1', title: 'Under Neon', likes: 892, duration: 7, cover: '/assets/pexels-amar-29656074.jpg' },
+    { id: 'f2', title: 'Paper Boats', likes: 641, duration: 6, cover: '/assets/pexels-jillyjillystudio-33962662.jpg' },
+    { id: 'f3', title: 'Moonlit Alley', likes: 1240, duration: 10, cover: '/assets/pexels-guillermo-berlin-1524368912-30068229.jpg' },
+    { id: 'f4', title: 'Quiet Wind', likes: 418, duration: 5, cover: '/assets/pexels-andreas-schnabl-1775843-19321355.jpg' },
+    { id: 'f5', title: 'Blue Bicycle', likes: 305, duration: 9, cover: '/assets/pexels-chriszwettler-9407824.jpg' },
+    { id: 'f6', title: 'Paint the Air', likes: 833, duration: 8, cover: '/assets/pexels-delot-29721171.jpg' },
+  ];
 
-  // Fetch uploads for this user when authenticated
-  const { data: userVideos = [] } = useFetch(
-    authChecked && isAuthenticated ? `/videos${query}` : null,
-    { fallbackData: [] }
-  );
+  const headerStyle = {
+    background: 'linear-gradient(135deg, rgba(255,182,39,.16), rgba(15,163,177,.18)), var(--cd-surface)',
+    border: '1px solid var(--cd-border)',
+    borderRadius: '16px',
+    padding: 16,
+  };
 
-  // Normalize data for UI
-  const profile = useMemo(() => {
-    const displayName = (user?.name || user?.email || 'You');
-    const followers = 0; // backend can provide later
-    const following = 0; // backend can provide later
+  const avatarStyle = {
+    width: 96,
+    height: 96,
+    borderRadius: 28,
+    display: 'grid',
+    placeItems: 'center',
+    fontSize: 42,
+    fontWeight: 900,
+    color: '#3a2f58',
+    background: 'var(--cd-gradient)',
+    boxShadow: '0 10px 30px rgba(0,0,0,.08)',
+    border: '1px solid var(--cd-border)',
+  };
 
-    const uploads = (userVideos || []).map((v, idx) => ({
-      id: v.id || v._id || `v-${idx}`,
-      title: v.title || v.name || v.filename || `Video ${idx + 1}`,
-      url: v.url || v.videoUrl || v.link || '',
-      likes: v.likes ?? v.stars ?? 0,
-      duration: v.duration ?? v.length ?? 0,
-      createdAt: v.createdAt || v.date || v.uploadedAt || v.timestamp || null,
-      // cover support (optional)
-      cover: v.cover_image || v.cover || v.coverUrl || v.thumbnail || v.thumbnailUrl || v.poster || null,
-    }));
+  const pill = {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 8,
+    padding: '8px 12px',
+    borderRadius: 999,
+    border: '1px solid var(--cd-border)',
+    background: 'var(--cd-chip-bg)',
+  };
 
-    return {
-      id: userId || 'unknown',
-      name: displayName,
-      bio: user?.bio || 'Your creative corner to manage and showcase your short films.',
-      followers,
-      following,
-      uploads,
-      liked: [], // placeholder list for "Liked" tab (to be populated when backend endpoint is ready)
-    };
-  }, [user?.name, user?.email, userId, userVideos, user?.bio]);
-
-  // Auth loading state
-  if (!authChecked) {
-    return (
-      <div className="card section" role="status">
-        <strong>Loading your profile...</strong>
-      </div>
-    );
-  }
-
-  // If not authenticated, block personal profile
-  if (!isAuthenticated) {
-    return (
-      <div className="card section">
-        <h2>Your Profile</h2>
-        <p className="muted">
-          You are not signed in. To view and manage your personal videos, please sign in or configure authentication on the backend.
-        </p>
-        <div className="pill" style={{ marginTop: 8 }}>
-          Requirements: a GET /auth/me endpoint that returns your identity, and video storage that includes author/email/userId fields.
-        </div>
-      </div>
-    );
-  }
+  const smallMuted = { fontSize: 13, color: 'var(--cd-muted)' };
 
   return (
-    <div className="page-profile" style={{ color: '#e8f6f8' }}>
-      {/* Banner / Bio */}
-      <div
-        className="card section"
-        style={{
-          background: 'linear-gradient(180deg, #121619 0%, #0b1013 100%)',
-          borderColor: '#1e2a31',
-        }}
-      >
-        <div className="row" style={{ gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
-          <div
-            aria-label="User avatar"
-            style={{
-              width: 86,
-              height: 86,
-              borderRadius: 24,
-              background:
-                'radial-gradient(120px 60px at 0% 0%, rgba(255,182,39,0.2), transparent 70%), var(--cd-gradient)',
-              border: '2px solid #26363f',
-              flexShrink: 0,
-            }}
-          />
+    <div className="page-profile">
+      {/* Header / identity */}
+      <div className="card section" style={headerStyle}>
+        <div className="row" style={{ alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
+          <div aria-label="Profile avatar" style={avatarStyle} title="Mock avatar">
+            {user.avatarEmoji}
+          </div>
           <div style={{ display: 'grid', gap: 6, minWidth: 220 }}>
-            <h2 style={{ margin: 0, color: '#eafcff' }}>{profile.name}</h2>
-            <div className="muted" style={{ color: '#9fb4bd' }}>
-              {profile.bio}
-            </div>
-            <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
-              <span className="pill" style={pillDark} aria-label="Followers count">
-                Followers: {profile.followers}
-              </span>
-              <span className="pill" style={pillDark} aria-label="Following count">
-                Following: {profile.following}
-              </span>
-              <span className="pill" style={pillDark} aria-label="Uploads count">
-                🎬 {profile.uploads.length} uploads
-              </span>
+            <div style={{ fontWeight: 900, fontSize: 22 }}>{user.name}</div>
+            <div style={smallMuted}>{user.username}</div>
+            <div style={{ color: 'var(--cd-text)' }}>{user.bio}</div>
+            <div className="row" style={{ flexWrap: 'wrap', gap: 8 }}>
+              <span className="pill" style={pill}>Followers: {user.followers}</span>
+              <span className="pill" style={pill}>Following: {user.following}</span>
+              <span className="pill" style={pill}>Films: {films.length}</span>
             </div>
           </div>
           <div className="space" />
           <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
-            <button className="btn" style={{ boxShadow: '0 8px 24px rgba(15,163,177,.35)' }}>
-              Edit Profile
-            </button>
-            <button className="btn secondary" title="Share your profile">
-              Share Profile
-            </button>
+            <button className="btn">Edit Profile</button>
+            <button className="btn secondary">Share</button>
           </div>
-        </div>
-
-        {/* Quick actions row */}
-        <div style={{ height: 10 }} />
-        <div className="row" style={{ gap: 8, flexWrap: 'wrap' }} aria-label="Quick actions">
-          <span className="pill" style={pillDark}>Create Playlist</span>
-          <span className="pill" style={pillDark}>Invite Collaborators</span>
-          <span className="pill" style={pillDark}>Account Settings</span>
         </div>
       </div>
 
       <div style={{ height: 16 }} />
 
-      {/* Tabs: Uploads / Liked */}
-      <div className="card section" style={{ background: '#0f1417', borderColor: '#1e2a31' }}>
-        <div className="row" role="tablist" aria-label="Profile content tabs" style={{ gap: 8 }}>
-          <button
-            role="tab"
-            aria-selected={activeTab === 'uploads' ? 'true' : 'false'}
-            className="pill"
-            onClick={() => setActiveTab('uploads')}
-            style={{ ...pillDark, borderColor: activeTab === 'uploads' ? 'var(--cd-primary)' : pillDark.border }}
-          >
-            Uploads
-          </button>
-          <button
-            role="tab"
-            aria-selected={activeTab === 'liked' ? 'true' : 'false'}
-            className="pill"
-            onClick={() => setActiveTab('liked')}
-            style={{ ...pillDark, borderColor: activeTab === 'liked' ? 'var(--cd-primary)' : pillDark.border }}
-          >
-            Liked
-          </button>
+      {/* Following section */}
+      <div className="card section">
+        <div className="row" style={{ alignItems: 'baseline' }}>
+          <strong>Following</strong>
+          <div className="space" />
+          <span className="pill" style={pill}>{user.following} total</span>
+        </div>
+        <div style={{ height: 10 }} />
+        <div className="row" style={{ flexWrap: 'wrap', gap: 8 }}>
+          {user.followingList.map((f) => (
+            <span key={f.id} className="pill" style={pill} title={`Following ${f.name}`}>
+              <span className="dot" />
+              {f.name}
+            </span>
+          ))}
         </div>
       </div>
 
-      <div style={{ height: 12 }} />
+      <div style={{ height: 16 }} />
 
-      {/* Uploads tab */}
-      {activeTab === 'uploads' && (
-        <div
-          className="card section"
-          style={{ background: '#0f1417', borderColor: '#1e2a31' }}
-          aria-label="User uploads gallery"
-        >
-          <div className="row" style={{ justifyContent: 'space-between', alignItems: 'baseline' }}>
-            <strong style={{ color: '#d8f2f6' }}>Your uploads</strong>
-            <span className="muted" style={{ color: '#94a9b1', fontSize: 13 }}>
-              Click a card to open a large player
-            </span>
-          </div>
-
-          <div style={{ height: 12 }} />
-
-          {(!profile.uploads || profile.uploads.length === 0) && (
-            <div className="muted" style={{ color: '#94a9b1' }}>
-              You have no videos yet. Upload your first short to get started.
-            </div>
-          )}
-
-          <div className="film-grid">
-            {(profile.uploads || []).map((v) => (
-              <button
-                key={v.id}
-                className="card film-card"
-                onClick={() => setSpotlight(v)}
-                style={{
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  background: 'linear-gradient(180deg, #11181c 0%, #0d1316 100%)',
-                  borderColor: '#22323b',
-                }}
-                aria-label={`Open video ${v.title}`}
-                title={v.title}
-              >
-                <div
-                  className="film-thumb"
-                  style={{
-                    background:
-                      'radial-gradient(40% 50% at 20% 10%, rgba(15,163,177,.16), transparent 70%), #0a0f12',
-                    position: 'relative'
-                  }}
-                >
-                  {/* Cover if available */}
-                  {v.cover ? (
-                    <img
-                      src={v.cover}
-                      alt={`Cover of ${v.title}`}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                    />
-                  ) : null}
-                  <div
-                    className="badge"
-                    style={{
-                      background: 'rgba(9,13,15,.8)',
-                      borderColor: '#20313a',
-                      color: '#d6eef2',
-                      padding: '6px 10px',
-                      fontSize: 13
-                    }}
-                  >
-                    ★ {v.likes} • ⏱ {v.duration}m
-                  </div>
+      {/* Films grid */}
+      <div className="card section">
+        <div className="row" style={{ alignItems: 'baseline' }}>
+          <strong>My Short Films</strong>
+          <div className="space" />
+          <span className="muted" style={smallMuted}>Playful mock gallery</span>
+        </div>
+        <div style={{ height: 10 }} />
+        <div className="film-grid">
+          {films.map((film) => (
+            <div key={film.id} className="card film-card" style={{ textDecoration: 'none' }}>
+              <div className="film-thumb" style={{ position: 'relative', background: 'var(--cd-bg)' }}>
+                <img
+                  src={film.cover}
+                  alt={`Cover of ${film.title}`}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+                <div className="badge">★ {film.likes} • ⏱ {film.duration}m</div>
+              </div>
+              <div className="film-meta">
+                <div className="film-title">{film.title}</div>
+                <div className="film-author" style={{ color: 'var(--cd-muted)' }}>
+                  by {user.name}
                 </div>
-                <div className="film-meta">
-                  <div className="film-title" style={{ color: '#eafcff' }}>
-                    {v.title}
-                  </div>
-                  <div className="film-author" style={{ color: '#93a8b0' }}>
-                    {v.createdAt && dayjs(v.createdAt).isValid()
-                      ? dayjs(v.createdAt).format('YYYY-MM-DD HH:mm')
-                      : '—'}
-                  </div>
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Liked tab (placeholder content) */}
-      {activeTab === 'liked' && (
-        <div className="card section" style={{ background: '#0f1417', borderColor: '#1e2a31' }}>
-          <strong style={{ color: '#d8f2f6' }}>Liked films</strong>
-          <div style={{ height: 8 }} />
-          <p className="muted" style={{ color: '#94a9b1' }}>
-            Your liked films will appear here when the backend endpoint is connected.
-          </p>
-          <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
-            <span className="pill" style={pillDark}>Tip: Explore Discover and press the Like button</span>
-            <span className="pill" style={pillDark}>You can unlike from film pages</span>
-          </div>
-        </div>
-      )}
-
-      {/* Spotlight modal with large player */}
-      {spotlight && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label={`Player for ${spotlight.title}`}
-          style={modalBackdrop}
-          onClick={() => setSpotlight(null)}
-        >
-          <div
-            className="card"
-            style={modalCard}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="row" style={{ padding: 12, borderBottom: '1px solid #22323b' }}>
-              <strong style={{ color: '#eafcff' }}>{spotlight.title}</strong>
-              <div className="space" />
-              <button
-                className="pill"
-                style={pillDark}
-                onClick={() => setSpotlight(null)}
-                aria-label="Close player"
-              >
-                Close ✕
-              </button>
+              </div>
             </div>
-            <div style={{ background: '#000', position: 'relative' }}>
-              <video
-                controls
-                style={{ width: '100%', height: 'auto', display: 'block' }}
-                src={spotlight.url}
-                poster=""
-              />
-            </div>
-            <div className="row" style={{ padding: 12, borderTop: '1px solid #22323b' }}>
-              <span className="pill" style={pillDark}>★ {spotlight.likes}</span>
-              <span className="pill" style={pillDark}>⏱ {spotlight.duration} min</span>
-              <div className="space" />
-              <button className="btn secondary">Share</button>
-            </div>
-          </div>
+          ))}
         </div>
-      )}
+      </div>
     </div>
   );
 }
-
-const pillDark = {
-  background: '#0c1114',
-  border: '1px solid #22323b',
-  color: '#cfe6ea',
-};
-
-const modalBackdrop = {
-  position: 'fixed',
-  inset: 0,
-  background: 'rgba(5,8,10,.72)',
-  backdropFilter: 'blur(4px)',
-  display: 'grid',
-  placeItems: 'center',
-  padding: 16,
-  zIndex: 80,
-};
-
-const modalCard = {
-  width: 'min(1100px, 100%)',
-  background: 'linear-gradient(180deg, #0e1316 0%, #0a0f12 100%)',
-  border: '1px solid #22323b',
-  borderRadius: 16,
-  overflow: 'hidden',
-  boxShadow: '0 20px 60px rgba(0,0,0,.45)',
-};
