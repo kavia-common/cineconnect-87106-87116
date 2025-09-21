@@ -21,7 +21,11 @@ export default function TopNav() {
 
         <div className="pill" style={{ flex: 1, maxWidth: 640, marginLeft: 12 }}>
           <span className="dot" />
-          <input className="input" placeholder="Buscar películas, creadores, hashtags..." aria-label="Buscar" />
+          <input
+            className="input"
+            placeholder="Search films, creators, hashtags..."
+            aria-label="Search"
+          />
         </div>
 
         <nav className="row" style={{ marginLeft: 8 }}>
@@ -39,8 +43,8 @@ export default function TopNav() {
           <button
             className="pill theme-switch"
             onClick={toggleTheme}
-            aria-label={isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
-            title={isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+            aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+            title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
           >
             <span aria-hidden="true" role="img">
               {isDark ? '🌙' : '🌞'}

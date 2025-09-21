@@ -4,7 +4,7 @@ import { VideoUploadSection } from '../components';
 /**
  * PUBLIC_INTERFACE
  * Upload page renders the Video Upload Section in its own dedicated route.
- * Mantiene la interfaz en español y respeta el tema actual (claro/oscuro).
+ * Keeps a playful style and respects current light/dark theme.
  */
 export default function Upload() {
   return (

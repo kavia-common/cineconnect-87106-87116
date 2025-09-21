@@ -32,7 +32,7 @@ export default function RightSidebar() {
       <div className="card section">
         <strong>Weekly Challenge</strong>
         <div style={{ height: 8 }} />
-        <div className="muted" style={{ fontSize: 14 }}>Theme: "Unexpected Kindness"</div>
+        <div className="muted" style={{ fontSize: 14 }}>Theme: “Unexpected Kindness”</div>
         <div style={{ height: 10 }} />
         <Link to="/challenges" className="btn">Join Challenge</Link>
       </div>
