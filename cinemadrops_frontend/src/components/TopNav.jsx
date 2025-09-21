@@ -24,6 +24,7 @@ export default function TopNav({ onOpenChat, onOpenNotifications, onOpenQuick })
           <NavLink to="/curated" className="pill">Curated</NavLink>
           <NavLink to="/challenges" className="pill">Challenges</NavLink>
           <NavLink to="/forums" className="pill">Forums</NavLink>
+          <NavLink to="/subir" className="pill" aria-label="Subir Video">Subir Video</NavLink>
           <NavLink to="/perfil" className="pill" aria-label="Ir a mi perfil">Perfil</NavLink>
         </nav>
         <div className="space" />

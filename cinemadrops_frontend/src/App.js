@@ -19,6 +19,7 @@ import ChatDrawer from './drawers/ChatDrawer';
 import NotificationsDrawer from './drawers/NotificationsDrawer';
 import QuickActionsDrawer from './drawers/QuickActionsDrawer';
 import Profile from './pages/Profile';
+import Upload from './pages/Upload';
 
 // PUBLIC_INTERFACE
 function App() {
@@ -56,6 +57,7 @@ function App() {
                       <Route path="/challenges" element={<Challenges />} />
                       <Route path="/curated" element={<Curated />} />
                       <Route path="/perfil" element={<Profile />} />
+                      <Route path="/subir" element={<Upload />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                   </main>

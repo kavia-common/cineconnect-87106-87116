@@ -35,5 +35,7 @@ Backends esperados:
 - Si tu backend prefiere base64, adapta el endpoint para aceptar `cover_image` como archivo o agrega un parser de base64; en este proyecto enviamos multipart.
 
 Si necesitas añadir una ruta de navegación:
-- Crea una página nueva que importe y renderice `VideoUploadSection`.
-- Agrega una `Route` en `src/App.js` y un enlace en `TopNav` si corresponde.
+- Ya existe una página dedicada de subida accesible en: `/subir`.
+- El componente `VideoUploadSection` se renderiza en `src/pages/Upload.jsx`.
+- La ruta está registrada en `src/App.js` y hay un enlace en la navegación superior (TopNav) con la etiqueta “Subir Video”.
+- Si prefieres otra ruta (p. ej. `/upload`), puedes agregar una ruta adicional en `App.js` y otro enlace en `TopNav`.

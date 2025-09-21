@@ -1,7 +1,6 @@
 import React from 'react';
 import { useApi } from '../services/Api';
 import FilmCard from '../components/FilmCard';
-import VideoUploadSection from '../components/VideoUploadSection';
 
 /**
  * PUBLIC_INTERFACE
@@ -22,10 +21,7 @@ export default function Home() {
         <span className="pill">Awarded</span>
       </div>
 
-      {/* Video upload and listing section visible on entry */}
-      <div style={{ marginBottom: 16 }}>
-        <VideoUploadSection />
-      </div>
+
 
       <div className="film-grid">
         {films.map(f => <FilmCard key={f.id} film={f} />)}
