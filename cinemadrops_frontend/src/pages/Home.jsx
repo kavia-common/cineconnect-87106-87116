@@ -43,7 +43,7 @@ export default function Home() {
     });
   }, [films, duration, activeTags]);
 
-  // Choose a default placeholder image from packaged assets
+  // Choose a default placeholder image from packaged assets (used for all cards)
   const defaultPlaceholder = '/assets/pexels-amar-29656074.jpg';
 
   return (
@@ -106,7 +106,7 @@ export default function Home() {
           <FilmCard
             key={f.id}
             film={f}
-            // Provide a fallback placeholder image from assets if the film lacks a cover
+            // Always use a static demo image for now (test requirement)
             placeholderImage={defaultPlaceholder}
           />
         ))}

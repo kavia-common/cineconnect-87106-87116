@@ -10,6 +10,9 @@ Cinemadrops es una plataforma lúdica y colaborativa para cortometrajes. Este fr
 
 Estado actual: se ha eliminado la funcionalidad de chat en vivo y notificaciones en tiempo real.
 
+Nota sobre Discover:
+- Por requerimiento de pruebas, el feed Discover muestra SIEMPRE una imagen de portada estática en cada tarjeta de video, sin depender de campos de asset/thumbnail. Esto se implementa en el componente FilmCard usando un placeholder fijo (/assets/pexels-amar-29656074.jpg).
+
 ## Tech
 - React 18 + React Router v6
 - SWR para fetching
