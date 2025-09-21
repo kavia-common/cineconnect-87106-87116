@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import './index.css';
 import { ApiProvider } from './services/Api';
 import { SocketProvider } from './services/Socket';
+import { ThemeProvider } from './services/Theme';
 import TopNav from './components/TopNav';
 import Home from './pages/Home';
 import FilmDetails from './pages/FilmDetails';
@@ -22,25 +23,27 @@ function App() {
     <BrowserRouter>
       <ApiProvider>
         <SocketProvider>
-          <div className="app-shell">
-            <TopNav />
-            <div className="main-grid container">
-              <main>
-                <Routes>
-                  <Route path="/" element={<Home />} />
-                  <Route path="/film/:id" element={<FilmDetails />} />
-                  <Route path="/creator/:id" element={<CreatorProfile />} />
-                  <Route path="/forums/*" element={<Forums />} />
-                  <Route path="/challenges" element={<ChallengesHub />} />
-                  <Route path="/challenges/:id" element={<ChallengeDetails />} />
-                  <Route path="/profile" element={<UserProfile />} />
-                  <Route path="/curated" element={<Curated />} />
-                  <Route path="/upload" element={<Upload />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </main>
+          <ThemeProvider>
+            <div className="app-shell">
+              <TopNav />
+              <div className="main-grid container">
+                <main>
+                  <Routes>
+                    <Route path="/" element={<Home />} />
+                    <Route path="/film/:id" element={<FilmDetails />} />
+                    <Route path="/creator/:id" element={<CreatorProfile />} />
+                    <Route path="/forums/*" element={<Forums />} />
+                    <Route path="/challenges" element={<ChallengesHub />} />
+                    <Route path="/challenges/:id" element={<ChallengeDetails />} />
+                    <Route path="/profile" element={<UserProfile />} />
+                    <Route path="/curated" element={<Curated />} />
+                    <Route path="/upload" element={<Upload />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </main>
+              </div>
             </div>
-          </div>
+          </ThemeProvider>
         </SocketProvider>
       </ApiProvider>
     </BrowserRouter>

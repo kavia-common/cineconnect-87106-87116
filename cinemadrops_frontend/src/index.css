@@ -3,6 +3,8 @@
   --cd-secondary: #FFB627;
   --cd-success: #FFB627;
   --cd-error: #ED6A5A;
+
+  /* Light theme baseline */
   --cd-bg: #F7F9F9;
   --cd-surface: #FFFFFF;
   --cd-text: #2F4858;
@@ -10,6 +12,17 @@
   --cd-border: #e6eaec;
   --cd-radius: 16px;
   --cd-gradient: linear-gradient(135deg, #ffd1f3 0%, #e8d7ff 50%, #d7ecff 100%);
+}
+
+/* Dark theme overrides on root element */
+html[data-theme="dark"] {
+  --cd-bg: #0f1216;
+  --cd-surface: #161a20;
+  --cd-text: #e8f0f2;
+  --cd-muted: #a4b0b7;
+  --cd-border: #27313a;
+  /* playful darker gradient */
+  --cd-gradient: linear-gradient(135deg, #3a2f58 0%, #2a385d 50%, #214c66 100%);
 }
 
 * { box-sizing: border-box; }
@@ -54,6 +67,8 @@ img { max-width: 100%; display: block; }
 }
 .btn:hover { transform: translateY(-2px); }
 .btn.secondary { background: var(--cd-secondary); box-shadow: 0 8px 24px rgba(255,182,39,.25); }
+html[data-theme="dark"] .btn { box-shadow: 0 8px 24px rgba(15, 163, 177, 0.35); }
+html[data-theme="dark"] .btn.secondary { box-shadow: 0 8px 24px rgba(255,182,39,.35); }
 
 /* Cards */
 .card {
@@ -112,7 +127,8 @@ img { max-width: 100%; display: block; }
 
 /* Pills and chips */
 .pill {
-  display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 999px; border: 1px solid var(--cd-border); background: #fff;
+  display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 999px;
+  border: 1px solid var(--cd-border); background: var(--cd-surface); color: var(--cd-text);
 }
 .pill .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--cd-primary); }
 
@@ -153,7 +169,7 @@ img { max-width: 100%; display: block; }
 /* Film card visuals: Slightly taller aspect ratio to feel more cinematic in grid */
 .film-thumb {
   aspect-ratio: 16/9; /* slightly taller to emphasize video */
-  background: #eef6f7;
+  background: rgba(15,163,177,0.10);
   position: relative;
   border-bottom-left-radius: var(--cd-radius);
   border-bottom-right-radius: var(--cd-radius);
@@ -180,8 +196,8 @@ img { max-width: 100%; display: block; }
   z-index: 50;
 }
 .dropdown-menu.playful {
-  background: #fff;
-  border-color: #e9eff1;
+  background: var(--cd-surface);
+  border-color: var(--cd-border);
 }
 .dropdown-item {
   display: flex;
@@ -190,16 +206,17 @@ img { max-width: 100%; display: block; }
   width: 100%;
   border: none;
   background: transparent;
+  color: var(--cd-text);
   padding: 10px 12px;
   border-radius: 10px;
   cursor: pointer;
   text-align: left;
 }
 .dropdown-item:hover {
-  background: #f6fbfc;
+  background: rgba(15, 163, 177, 0.10);
 }
 .dropdown-item.active {
-  background: #eef7f8;
+  background: rgba(15, 163, 177, 0.16);
   color: #0f6c77;
   font-weight: 700;
 }
@@ -242,10 +259,10 @@ img { max-width: 100%; display: block; }
   padding: 8px 12px;
   font-size: 13px;
   border-radius: 999px;
-  background: rgba(255,255,255,.92);
-  color: #333;
+  background: color-mix(in srgb, var(--cd-surface) 92%, transparent);
+  color: var(--cd-text);
   border: 1px solid var(--cd-border);
-  box-shadow: 0 6px 16px rgba(0,0,0,0.06);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.12);
 }
 
 .film-meta {
@@ -275,7 +292,7 @@ img { max-width: 100%; display: block; }
 .space { flex: 1; }
 .muted { color: var(--cd-muted); }
 .input {
-  width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--cd-border); background: #fff;
+  width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--cd-border); background: var(--cd-surface); color: var(--cd-text);
 }
 input.input, textarea.input { font-family: inherit; }
 .badge { padding: 4px 8px; border-radius: 8px; background: #f2fafb; color: #0f6c77; font-weight: 700; font-size: 12px; border: 1px solid #d8eef0; }

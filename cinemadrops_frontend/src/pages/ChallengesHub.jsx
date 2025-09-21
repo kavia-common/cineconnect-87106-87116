@@ -26,7 +26,7 @@ export default function ChallengesHub() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 16 }}>
           {active.map((c, i) => (
             <div key={c.id} className="card" style={{ gridColumn: 'span 3', overflow: 'hidden' }}>
-              <div style={{ position: 'relative', aspectRatio: '21/9', background: '#eef6f7' }}>
+              <div style={{ position: 'relative', aspectRatio: '21/9', background: 'rgba(15,163,177,0.10)' }}>
                 <img
                   src={getCoverByIndex(i)}
                   alt={`${c.title} cover`}
