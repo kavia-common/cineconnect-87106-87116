@@ -14,10 +14,10 @@ export default function FilmDetails() {
   const { useFetch } = useApi();
   const { data: film } = useFetch(`/films/${id}`, { fallbackData: fallback(id) });
 
-  // Compact player/card styling for a smaller, playful presentation
+  // Ultra-compact player/card styling so the individual short looks small and light
   const compactCard = {
     overflow: 'hidden',
-    width: 'min(820px, 100%)',
+    width: 'min(320px, 100%)', // keep it significantly smaller (~300px)
     margin: '0 auto',
     borderRadius: 16,
     border: '1px solid var(--cd-border)',
@@ -26,35 +26,35 @@ export default function FilmDetails() {
   };
 
   const compactHeader = {
-    aspectRatio: '16/10', // smaller than 16/9 to visibly reduce height
+    aspectRatio: '16/11', // slightly taller ratio to keep clarity in small area
     background:
-      'radial-gradient(40% 50% at 20% 10%, rgba(15,163,177,.16), transparent 70%), var(--cd-gradient)',
+      'radial-gradient(40% 50% at 20% 10%, rgba(15,163,177,.18), transparent 70%), var(--cd-gradient)',
     borderBottom: '1px solid var(--cd-border)',
   };
 
   const metaRow = {
     display: 'flex',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
     flexWrap: 'wrap',
   };
 
   return (
     <div className="page-film">
-      <div className="card" style={compactCard}>
-        <div style={compactHeader} />
-        <div style={{ padding: 12 }}>
-          <h2 style={{ margin: '6px 0', fontSize: '1.25rem' }}>{film.title}</h2>
+      <div className="card" style={compactCard} aria-label={`Detalle del corto ${film.title}`}>
+        <div style={compactHeader} aria-hidden="true" />
+        <div style={{ padding: 10 }}>
+          <h2 style={{ margin: '4px 0', fontSize: '1.05rem', lineHeight: 1.25 }}>{film.title}</h2>
           <div className="row" style={metaRow}>
-            <span className="pill" style={{ padding: '6px 10px' }}>by {film.author}</span>
-            <span className="pill" style={{ padding: '6px 10px' }}>⏱ {film.duration} min</span>
-            <span className="pill" style={{ padding: '6px 10px' }}>★ {film.likes}</span>
+            <span className="pill" style={{ padding: '4px 8px', fontSize: 12 }}>by {film.author}</span>
+            <span className="pill" style={{ padding: '4px 8px', fontSize: 12 }}>⏱ {film.duration} min</span>
+            <span className="pill" style={{ padding: '4px 8px', fontSize: 12 }}>★ {film.likes}</span>
           </div>
-          <p className="muted" style={{ marginTop: 8 }}>{film.description}</p>
+          <p className="muted" style={{ marginTop: 6, fontSize: 13, lineHeight: 1.35 }}>{film.description}</p>
         </div>
       </div>
 
-      <div style={{ height: 16 }} />
+      <div style={{ height: 12 }} />
 
       <div className="row" style={{ gap: 16, alignItems: 'stretch' }}>
         <div style={{ flex: 2 }}>
@@ -69,7 +69,7 @@ export default function FilmDetails() {
             </div>
           </div>
 
-          <div style={{ height: 16 }} />
+          <div style={{ height: 12 }} />
 
           <div className="card section">
             <strong>Script & Notes</strong>
