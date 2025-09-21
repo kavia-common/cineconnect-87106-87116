@@ -6,24 +6,51 @@ import Comments from '../components/Comments';
 /**
  * PUBLIC_INTERFACE
  * FilmDetails shows a single film page with content and social features.
+ * This view is intentionally more compact so a single short feels lighter
+ * and distinct from the larger Discover cards.
  */
 export default function FilmDetails() {
   const { id } = useParams();
   const { useFetch } = useApi();
   const { data: film } = useFetch(`/films/${id}`, { fallbackData: fallback(id) });
 
+  // Compact player/card styling for a smaller, playful presentation
+  const compactCard = {
+    overflow: 'hidden',
+    width: 'min(820px, 100%)',
+    margin: '0 auto',
+    borderRadius: 16,
+    border: '1px solid var(--cd-border)',
+    background: 'var(--cd-surface)',
+    boxShadow: '0 12px 30px rgba(0,0,0,.06)',
+  };
+
+  const compactHeader = {
+    aspectRatio: '16/10', // smaller than 16/9 to visibly reduce height
+    background:
+      'radial-gradient(40% 50% at 20% 10%, rgba(15,163,177,.16), transparent 70%), var(--cd-gradient)',
+    borderBottom: '1px solid var(--cd-border)',
+  };
+
+  const metaRow = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    flexWrap: 'wrap',
+  };
+
   return (
     <div className="page-film">
-      <div className="card" style={{ overflow: 'hidden' }}>
-        <div style={{ aspectRatio: '16/9', background: 'var(--cd-gradient)' }} />
-        <div style={{ padding: 16 }}>
-          <h2 style={{ margin: '8px 0' }}>{film.title}</h2>
-          <div className="row">
-            <span className="pill">by {film.author}</span>
-            <span className="pill">⏱ {film.duration} min</span>
-            <span className="pill">★ {film.likes}</span>
+      <div className="card" style={compactCard}>
+        <div style={compactHeader} />
+        <div style={{ padding: 12 }}>
+          <h2 style={{ margin: '6px 0', fontSize: '1.25rem' }}>{film.title}</h2>
+          <div className="row" style={metaRow}>
+            <span className="pill" style={{ padding: '6px 10px' }}>by {film.author}</span>
+            <span className="pill" style={{ padding: '6px 10px' }}>⏱ {film.duration} min</span>
+            <span className="pill" style={{ padding: '6px 10px' }}>★ {film.likes}</span>
           </div>
-          <p style={{ color: 'var(--cd-muted)' }}>{film.description}</p>
+          <p className="muted" style={{ marginTop: 8 }}>{film.description}</p>
         </div>
       </div>
 
