@@ -2,6 +2,7 @@ import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useApi } from '../services/Api';
 import FilmCard from '../components/FilmCard';
+import { getCoverByIndex } from '../assets/images';
 
 /**
  * PUBLIC_INTERFACE
@@ -34,7 +35,14 @@ export default function CreatorProfile() {
         <strong>Films</strong>
         <div style={{ height: 10 }} />
         <div className="film-grid">
-          {creator.films.map((f, i) => <FilmCard key={f.id} film={f} index={i} />)}
+          {creator.films.map((f, i) => (
+            <FilmCard
+              key={f.id}
+              film={f}
+              index={i}
+              image={getCoverByIndex(i)}
+            />
+          ))}
         </div>
       </div>
 

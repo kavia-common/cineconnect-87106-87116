@@ -1,6 +1,7 @@
 import React from 'react';
 import { useApi } from '../services/Api';
 import FilmCard from '../components/FilmCard';
+import { getCoverByIndex } from '../assets/images';
 
 /**
  * PUBLIC_INTERFACE
@@ -29,7 +30,14 @@ export default function Home() {
       </div>
 
       <div className="film-grid">
-        {films.map((f, i) => <FilmCard key={f.id} film={f} index={i} />)}
+        {films.map((f, i) => (
+          <FilmCard
+            key={f.id}
+            film={f}
+            index={i}
+            image={getCoverByIndex(i)}
+          />
+        ))}
       </div>
     </div>
   );

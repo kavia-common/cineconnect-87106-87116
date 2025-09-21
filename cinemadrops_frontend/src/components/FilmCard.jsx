@@ -1,33 +1,23 @@
-import React, { useMemo, useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
-import { getCoverByIndex } from '../assets/images';
 
 /**
  * PUBLIC_INTERFACE
  * FilmCard renders a short film card with playful style.
+ * Expects a real, already-imported image URL via the `image` prop.
  */
-export default function FilmCard({ film, index = 0 }) {
-  // Pick a cover based on index or id hash to keep it stable and playful
-  const computedIndex = useMemo(() => {
-    if (typeof index === 'number') return index;
-    // derive a number from id if index not provided
-    const s = String(film?.id ?? '');
-    return Array.from(s).reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
-  }, [film?.id, index]);
-
-  const initialSrc = getCoverByIndex(computedIndex);
-  const [src, setSrc] = useState(initialSrc);
-  const [broken, setBroken] = useState(false);
+export default function FilmCard({ film, index = 0, image }) {
+  // The image must be a real import (e.g., from src/assets) or an absolute public path (/assets/*).
+  // We do not compute or fetch images here; no fallback logic that could block rendering.
 
   return (
     <Link to={`/film/${film.id}`} className="card film-card" aria-label={`${film.title} by ${film.author}`}>
       <div className="film-thumb" style={{ position: 'relative', overflow: 'hidden' }}>
-        {!broken && src ? (
+        {image ? (
           <img
-            src={src}
+            src={image}
             alt={`${film.title} cover`}
             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-            onError={() => { setBroken(true); setSrc(null); }}
             loading="lazy"
           />
         ) : (

@@ -1,18 +1,17 @@
 /**
  * PUBLIC_INTERFACE
  * assetsImages exports the list of available cover images served from the public /assets folder.
- * We use absolute URLs (from web root) so dev/prod paths are correct without importing outside src.
- * Note: Place images under public/assets/* at build/deploy time.
+ * Use these absolute URLs directly as <img src="/assets/filename.jpg" />.
  */
 export const assetsImages = [
-  "/assets/pexels-alvarobalderas-20747775.jpg",
-  "/assets/pexels-amar-29656074.jpg",
-  "/assets/pexels-andreas-schnabl-1775843-19321355.jpg",
-  "/assets/pexels-chriszwettler-9407824.jpg",
-  "/assets/pexels-delot-29721171.jpg",
-  "/assets/pexels-guillermo-berlin-1524368912-30068229.jpg",
-  "/assets/pexels-jillyjillystudio-33962662.jpg",
-  "/assets/pexels-kalistro666-29263909.jpg",
+  '/assets/pexels-alvarobalderas-20747775.jpg',
+  '/assets/pexels-amar-29656074.jpg',
+  '/assets/pexels-andreas-schnabl-1775843-19321355.jpg',
+  '/assets/pexels-chriszwettler-9407824.jpg',
+  '/assets/pexels-delot-29721171.jpg',
+  '/assets/pexels-guillermo-berlin-1524368912-30068229.jpg',
+  '/assets/pexels-jillyjillystudio-33962662.jpg',
+  '/assets/pexels-kalistro666-29263909.jpg',
 ];
 
 /**
