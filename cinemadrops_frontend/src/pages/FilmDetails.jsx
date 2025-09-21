@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useApi } from '../services/Api';
 import Comments from '../components/Comments';
@@ -6,20 +6,76 @@ import Comments from '../components/Comments';
 /**
  * PUBLIC_INTERFACE
  * FilmDetails shows a single film page with content and social features.
- * This view is intentionally more compact so a single short feels lighter
- * and distinct from the larger Discover cards.
+ * It supports two data sources:
+ *  - AWS Lambda API: GET /videos_shortfilms/{filename}
+ *  - Local backend (tests/back-compat): GET /films/:id
+ *
+ * It reads the route param as a generic "slug" which could be either a filename or an id.
  */
 export default function FilmDetails() {
-  const { id } = useParams();
+  const { id: slug } = useParams();
   const { useFetch } = useApi();
-  const { data: film } = useFetch(`/films/${id}`, { fallbackData: fallback(id) });
+
+  // Local backend fetch (used for tests/backward compatibility)
+  const { data: localFilm } = useFetch(`/films/${slug}`, { fallbackData: fallback(slug) });
+
+  // AWS Lambda fetch for real shortfilm details by filename
+  const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || process.env.REACT_APP_API_BASE || 'https://s4myuxoa90.execute-api.us-east-2.amazonaws.com/devops';
+  const buildAwsUrl = (filename) => `${API_BASE_URL.replace(/\/$/, '')}/videos_shortfilms/${encodeURIComponent(filename)}`;
+
+  const [awsFilm, setAwsFilm] = useState(null);
+  const [awsLoading, setAwsLoading] = useState(true);
+  const [awsError, setAwsError] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function fetchAws() {
+      setAwsLoading(true);
+      setAwsError(null);
+      try {
+        // Heuristic: treat slug as a filename if it contains a dot or looks like a name (non-uuid simple ids also allowed)
+        const url = buildAwsUrl(slug);
+        const res = await fetch(url, { headers: { Accept: 'application/json' } });
+        // Some gateways return 404 if not found; in that case, we simply fall back to localFilm
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}`);
+        }
+        const ct = res.headers.get('content-type') || '';
+        let body;
+        if (ct.includes('application/json')) {
+          body = await res.json();
+        } else {
+          const text = await res.text();
+          try { body = JSON.parse(text); } catch { body = { raw: text }; }
+        }
+
+        // Normalize AWS response
+        const item = normalizeAwsFilm(body, slug);
+        if (!cancelled) setAwsFilm(item);
+      } catch (e) {
+        if (!cancelled) setAwsError(e);
+      } finally {
+        if (!cancelled) setAwsLoading(false);
+      }
+    }
+    fetchAws();
+    return () => { cancelled = true; };
+  }, [slug]);
+
+  // Choose which film to show: prefer awsFilm if loaded successfully
+  const film = useMemo(() => {
+    return awsFilm || localFilm;
+  }, [awsFilm, localFilm]);
+
+  // Loading/error states (only show AWS states if we didn't get any film yet)
+  const isLoading = awsLoading && !awsFilm && !localFilm;
+  const isError = awsError && !awsFilm && !localFilm;
 
   // Ultra-compact player/card styling so the individual short looks small and light
-  // Adjusted to a comfortable max width around 640px to improve readability and presence.
   const compactCard = {
     overflow: 'hidden',
     width: '100%',
-    maxWidth: 640, // target ~640px as requested
+    maxWidth: 640,
     margin: '0 auto',
     borderRadius: 16,
     border: '1px solid var(--cd-border)',
@@ -28,7 +84,7 @@ export default function FilmDetails() {
   };
 
   const compactHeader = {
-    aspectRatio: '16/9', // slightly wider for a more cinematic feel at 640px
+    aspectRatio: '16/9',
     background:
       'radial-gradient(40% 50% at 20% 10%, rgba(15,163,177,.18), transparent 70%), var(--cd-gradient)',
     borderBottom: '1px solid var(--cd-border)',
@@ -40,6 +96,22 @@ export default function FilmDetails() {
     gap: 8,
     flexWrap: 'wrap',
   };
+
+  if (isLoading) {
+    return (
+      <div className="card section" role="status">
+        Loading film...
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="card section" role="alert">
+        Could not load the film details.
+      </div>
+    );
+  }
 
   return (
     <div className="page-film">
@@ -82,7 +154,7 @@ export default function FilmDetails() {
           </div>
 
           <div style={{ height: 16 }} />
-          <Comments filmId={id} />
+          <Comments filmId={slug} />
         </div>
 
         <div className="rightbar" style={{ flex: 1 }}>
@@ -104,6 +176,42 @@ export default function FilmDetails() {
       </div>
     </div>
   );
+}
+
+function normalizeAwsFilm(body, slug) {
+  // Accept several shapes; if body contains a 'video' or 'item' field, unwrap it
+  const src = body?.video || body?.item || body?.data || body;
+
+  const title =
+    src?.title ||
+    src?.name ||
+    src?.nombre ||
+    src?.filename?.replace(/\.[^/.]+$/, '') ||
+    String(slug);
+
+  const author = src?.author || src?.creator || src?.autor || 'Unknown';
+  const likes = src?.likes ?? src?.stars ?? 0;
+  const duration = src?.duration ?? src?.length ?? 0;
+
+  return {
+    id: src?.id || src?._id || src?.key || String(slug),
+    title,
+    author,
+    duration,
+    likes,
+    description:
+      src?.description ||
+      src?.descripcion ||
+      'A short film shared on Cinemadrops.',
+    scriptSnippet:
+      src?.scriptSnippet ||
+      src?.notes ||
+      'Scene opens with a quiet street. Footsteps echo...',
+    crew: src?.crew && Array.isArray(src.crew)
+      ? src.crew
+      : ['Director: Unknown', 'DOP: Unknown', 'Editor: Unknown'],
+    more: Array.isArray(src?.more) ? src.more : [],
+  };
 }
 
 function fallback(id) {

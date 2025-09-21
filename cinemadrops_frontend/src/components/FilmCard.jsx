@@ -18,8 +18,11 @@ export default function FilmCard({
   const rawSrc = previewImage || placeholderImage;
   const src = getAssetUrl(rawSrc);
 
+  // Prefer filename if available (API detail pages are expected at /videos_shortfilms/{filename})
+  const toHref = `/film/${encodeURIComponent(film.filename || film.id)}`;
+
   return (
-    <Link to={`/film/${film.id}`} className="card film-card" style={{ textDecoration: 'none' }}>
+    <Link to={toHref} className="card film-card" style={{ textDecoration: 'none' }}>
       <div
         className="film-thumb"
         style={{ position: 'relative', background: 'var(--cd-bg)' }}

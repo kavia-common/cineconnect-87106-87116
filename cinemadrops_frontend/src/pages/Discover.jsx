@@ -106,6 +106,8 @@ export default function Discover() {
 
       return {
         id,
+        // if API provides a filename or key use it for deep-linking to details page
+        filename: item.filename || item.key || item.name || null,
         title,
         author,
         likes,
