@@ -196,29 +196,36 @@ export default function FilmDetails() {
     flexWrap: 'wrap',
   };
 
-  // Local-only reactions state (no backend persistence yet)
+  // Local-only reactions counters (no backend persistence yet)
   const [reactions, setReactions] = useState(() => ({
     dislike: 0,
     like: film?.likes ? Math.max(0, Number(film.likes) || 0) : 0,
     love: 0,
     lifeChanging: 0,
   }));
+  // Track which reaction is currently active for this user locally
+  const [activeReaction, setActiveReaction] = useState(null); // 'dislike' | 'like' | 'love' | 'lifeChanging' | null
 
-  const inc = (key) => {
-    setReactions((prev) => ({ ...prev, [key]: (prev[key] || 0) + 1 }));
+  // Toggle logic ensuring only one active at a time.
+  // If clicking the same active reaction, it toggles off (deselect).
+  const toggleReaction = (key) => {
+    setActiveReaction((prev) => (prev === key ? null : key));
+    // Counters are left unchanged by default per task; if future features require counts,
+    // implement inc/dec around this state change.
   };
 
-  // Small helper for accessible reaction buttons
-  const ReactionButton = ({ icon, label, count, onClick, ariaLabel }) => (
+  // Small helper for accessible reaction buttons with single-select visual state
+  const ReactionButton = ({ icon, label, count, onClick, ariaLabel, active }) => (
     <button
       type="button"
       className="pill"
       onClick={onClick}
       aria-label={ariaLabel || label}
+      aria-pressed={active ? 'true' : 'false'}
       title={label}
       style={{
         background: 'var(--cd-chip-bg)',
-        borderColor: 'var(--cd-border)',
+        borderColor: active ? 'var(--cd-primary)' : 'var(--cd-border)',
         cursor: 'pointer',
         userSelect: 'none',
         display: 'inline-flex',
@@ -233,7 +240,7 @@ export default function FilmDetails() {
       }}
       onBlur={(e) => {
         e.currentTarget.style.boxShadow = 'none';
-        e.currentTarget.style.borderColor = 'var(--cd-border)';
+        e.currentTarget.style.borderColor = active ? 'var(--cd-primary)' : 'var(--cd-border)';
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,.06)';
@@ -624,10 +631,38 @@ export default function FilmDetails() {
           {/* Reactions row */}
           <div style={{ height: 10 }} />
           <div className="row" style={{ flexWrap: 'wrap', gap: 8 }}>
-            <ReactionButton icon="👎" label="Dislike" ariaLabel="Dislike this short" count={reactions.dislike} onClick={() => inc('dislike')} />
-            <ReactionButton icon="👍" label="Like" ariaLabel="Like this short" count={reactions.like} onClick={() => inc('like')} />
-            <ReactionButton icon="❤️" label="Love" ariaLabel="Love this short" count={reactions.love} onClick={() => inc('love')} />
-            <ReactionButton icon="🌟" label="Life changing" ariaLabel="This short is life changing" count={reactions.lifeChanging} onClick={() => inc('lifeChanging')} />
+            <ReactionButton
+              icon="👎"
+              label="Dislike"
+              ariaLabel="Dislike this short"
+              count={reactions.dislike}
+              active={activeReaction === 'dislike'}
+              onClick={() => toggleReaction('dislike')}
+            />
+            <ReactionButton
+              icon="👍"
+              label="Like"
+              ariaLabel="Like this short"
+              count={reactions.like}
+              active={activeReaction === 'like'}
+              onClick={() => toggleReaction('like')}
+            />
+            <ReactionButton
+              icon="❤️"
+              label="Love"
+              ariaLabel="Love this short"
+              count={reactions.love}
+              active={activeReaction === 'love'}
+              onClick={() => toggleReaction('love')}
+            />
+            <ReactionButton
+              icon="🌟"
+              label="Life changing"
+              ariaLabel="This short is life changing"
+              count={reactions.lifeChanging}
+              active={activeReaction === 'lifeChanging'}
+              onClick={() => toggleReaction('lifeChanging')}
+            />
           </div>
 
           <p className="muted" style={{ marginTop: 8, fontSize: 14, lineHeight: 1.45 }}>{film.description}</p>
