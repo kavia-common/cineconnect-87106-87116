@@ -155,6 +155,129 @@ export default function FilmDetails() {
     </button>
   );
 
+  // --- Video playback state + logic ---
+  // Holds the resolved playable URL (signed URL) or a data URI when API returns base64/blob
+  const [videoSrc, setVideoSrc] = useState('');
+  const [playLoading, setPlayLoading] = useState(false);
+  const [playError, setPlayError] = useState('');
+
+  // PUBLIC_INTERFACE
+  async function handlePlay() {
+    /**
+     * Fetch the short film content or signed URL and attach it to the HTML5 video element.
+     * Route used: GET /videos_shortfilms/{filename}?include_content=true
+     * - If API returns JSON with { url } or similar, we use it directly.
+     * - If API returns base64 or blob-like content, we build a data: URI.
+     *
+     * Connection explanation:
+     * - The Play button triggers this function.
+     * - We build the path using slug (usually filename from Discover).
+     * - We always pass include_content=true so backends can decide to embed content.
+     * - Loading and error states are reflected in UI elements under the player.
+     */
+    setPlayLoading(true);
+    setPlayError('');
+    setVideoSrc('');
+    try {
+      const base = (process.env.REACT_APP_API_BASE_URL || process.env.REACT_APP_API_BASE || 'https://s4myuxoa90.execute-api.us-east-2.amazonaws.com/devops').replace(/\/$/, '');
+      const endpoint = `${base}/videos_shortfilms/${encodeURIComponent(slug)}?include_content=true`;
+      const res = await fetch(endpoint, { method: 'GET' });
+
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status} ${res.statusText}`);
+      }
+
+      const contentType = res.headers.get('content-type') || '';
+
+      // Try JSON first (common for API Gateway)
+      if (contentType.includes('application/json')) {
+        const body = await res.json();
+
+        // normalize common fields that might carry the playable url
+        const url =
+          body?.url ||
+          body?.link ||
+          body?.Location ||
+          body?.signedUrl ||
+          body?.videoUrl ||
+          body?.playbackUrl ||
+          body?.body?.url ||
+          body?.body?.signedUrl ||
+          null;
+
+        // If there's an embedded base64 content
+        const base64 =
+          body?.base64 ||
+          body?.file_content ||
+          body?.content ||
+          body?.body?.base64 ||
+          null;
+
+        const contentTypeFromBody =
+          body?.content_type ||
+          body?.mime ||
+          body?.mimeType ||
+          'video/mp4';
+
+        if (url) {
+          setVideoSrc(url);
+        } else if (base64) {
+          // Ensure we prepend data URI header
+          const dataUri = base64.startsWith('data:')
+            ? base64
+            : `data:${contentTypeFromBody};base64,${base64}`;
+          setVideoSrc(dataUri);
+        } else {
+          // Fallback: if body is actually a string url
+          if (typeof body === 'string' && /^https?:\/\//.test(body)) {
+            setVideoSrc(body);
+          } else {
+            throw new Error('API did not return a playable URL or base64 content.');
+          }
+        }
+      } else {
+        // If API returns raw text, try to parse or treat as URL
+        const text = await res.text();
+        try {
+          const body = JSON.parse(text);
+          const url = body?.url || body?.signedUrl || body?.videoUrl || null;
+          const base64 = body?.base64 || body?.content || null;
+          const contentTypeFromBody = body?.content_type || 'video/mp4';
+          if (url) {
+            setVideoSrc(url);
+          } else if (base64) {
+            const dataUri = base64.startsWith('data:')
+              ? base64
+              : `data:${contentTypeFromBody};base64,${base64}`;
+            setVideoSrc(dataUri);
+          } else if (typeof body === 'string' && /^https?:\/\//.test(body)) {
+            setVideoSrc(body);
+          } else {
+            // Sometimes API can return a plain signed URL string (not JSON)
+            if (/^https?:\/\//.test(text.trim())) {
+              setVideoSrc(text.trim());
+            } else {
+              throw new Error('Unrecognized response format for video content.');
+            }
+          }
+        } catch {
+          // Raw text not JSON. If looks like URL, use it
+          if (/^https?:\/\//.test(text.trim())) {
+            setVideoSrc(text.trim());
+          } else if (text.startsWith('data:')) {
+            setVideoSrc(text.trim());
+          } else {
+            throw new Error('Unrecognized non-JSON response for video content.');
+          }
+        }
+      }
+    } catch (err) {
+      setPlayError(err?.message || 'Could not load the video.');
+    } finally {
+      setPlayLoading(false);
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="card section" role="status">
@@ -202,6 +325,46 @@ export default function FilmDetails() {
           </div>
 
           <p className="muted" style={{ marginTop: 8, fontSize: 14, lineHeight: 1.45 }}>{film.description}</p>
+
+          {/* --- Inline player controls --- */}
+          <div style={{ height: 10 }} />
+          <div className="row" style={{ gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              className="btn"
+              onClick={handlePlay}
+              disabled={playLoading}
+              aria-label="Play this short film"
+              title="Play"
+            >
+              {playLoading ? 'Loading…' : '▶ Play'}
+            </button>
+            {playLoading && <span className="muted" role="status">Fetching video...</span>}
+            {playError && (
+              <span className="pill" role="alert" style={{ borderColor: 'var(--cd-error)', color: 'var(--cd-text)' }}>
+                Error: {playError}
+              </span>
+            )}
+          </div>
+
+          {/* Video player appears after we have a source.
+              Note: the Play button above triggers the GET /videos_shortfilms/{filename}?include_content=true
+              and sets videoSrc here. */}
+          {videoSrc ? (
+            <>
+              <div style={{ height: 10 }} />
+              <div style={{ background: '#000', borderRadius: 12, overflow: 'hidden', border: '1px solid var(--cd-border)' }}>
+                <video
+                  controls
+                  style={{ width: '100%', height: 'auto', display: 'block' }}
+                  src={videoSrc}
+                />
+              </div>
+              <div className="muted" style={{ fontSize: 12, marginTop: 6 }}>
+                Source: {videoSrc.startsWith('data:') ? 'Embedded (base64)' : 'URL'}
+              </div>
+            </>
+          ) : null}
         </div>
       </div>
 
