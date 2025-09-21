@@ -3,7 +3,6 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { ApiProvider } from '../../services/Api';
 import Home from '../../pages/Home';
-import Curated from '../../pages/Curated';
 import Challenges from '../../pages/Challenges';
 import Forums from '../../pages/Forums';
 import FilmDetails from '../../pages/FilmDetails';
@@ -22,16 +21,7 @@ test('route: / renders Home with Discover feed', () => {
   expect(screen.getByText(/Discover/i)).toBeInTheDocument();
 });
 
-test('route: /curated renders Curated', () => {
-  render(
-    <MemoryRouter initialEntries={['/curated']}>
-      <Routes>
-        <Route path="/curated" element={<Curated />} />
-      </Routes>
-    </MemoryRouter>
-  );
-  expect(screen.getByText(/^Curated$/i)).toBeInTheDocument();
-});
+
 
 test('route: /challenges renders Challenges', () => {
   render(

@@ -1,7 +1,7 @@
 # Cinemadrops Frontend (React)
 
 Cinemadrops es una plataforma lúdica y colaborativa para cortometrajes. Este frontend implementa:
-- Feed de descubrimiento y listas curadas
+- Feed de descubrimiento
 - Páginas detalladas de películas con “behind the scenes” y scripts
 - Perfiles de creadores
 - Comentarios y foros
@@ -35,7 +35,7 @@ Abre http://localhost:3000
 ## Estructura del proyecto
 - src/services/Api.js — helpers de API y SWR
 - src/components/* — Componentes reutilizables (TopNav, RightSidebar, FilmCard, Comments)
-- src/pages/* — Páginas de rutas (Home, FilmDetails, CreatorProfile, Forums, Challenges, Curated)
+- src/pages/* — Páginas de rutas (Home, FilmDetails, CreatorProfile, Forums, Challenges)
 - src/index.css — Estilos del tema
 
 Se han removido:

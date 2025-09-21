@@ -7,12 +7,8 @@ test('renders home with brand', () => {
   expect(screen.getByText(/Cinemadrops/i)).toBeInTheDocument();
 });
 
-test('navigates to known routes via links', () => {
+test('navigates to known routes via links (Challenges)', () => {
   render(<App />);
-  const linkCurated = screen.getByRole('link', { name: /Curated/i });
-  linkCurated.click();
-  expect(screen.getByText(/Curated/i)).toBeInTheDocument();
-
   const linkChallenges = screen.getByRole('link', { name: /Challenges/i });
   linkChallenges.click();
   expect(screen.getByText(/Weekly Challenges/i)).toBeInTheDocument();

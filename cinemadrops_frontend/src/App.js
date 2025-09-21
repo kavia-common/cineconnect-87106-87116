@@ -11,7 +11,6 @@ import FilmDetails from './pages/FilmDetails';
 import CreatorProfile from './pages/CreatorProfile';
 import Forums from './pages/Forums';
 import Challenges from './pages/Challenges';
-import Curated from './pages/Curated';
 import NotFound from './pages/NotFound';
 import Profile from './pages/Profile';
 import Upload from './pages/Upload';
@@ -34,7 +33,6 @@ function App() {
                     <Route path="/creator/:id" element={<CreatorProfile />} />
                     <Route path="/forums/*" element={<Forums />} />
                     <Route path="/challenges" element={<Challenges />} />
-                    <Route path="/curated" element={<Curated />} />
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/upload" element={<Upload />} />
                     {/* Legacy Spanish aliases for backward compatibility */}
