@@ -271,8 +271,8 @@ export default function VideoUploadSection() {
   };
 
   const placeholderThumb = (
-    <div className="film-thumb" style={{ background: '#eef6f7', position: 'relative' }}>
-      <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', color: '#7a8b94' }}>
+    <div className="film-thumb" style={{ background: 'var(--cd-bg)', position: 'relative' }}>
+      <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', color: 'var(--cd-muted)' }}>
         <div className="pill">Sin portada</div>
       </div>
     </div>
@@ -292,7 +292,7 @@ export default function VideoUploadSection() {
           role={mensaje.type === 'error' ? 'alert' : 'status'}
           style={{
             borderColor: mensaje.type === 'error' ? 'var(--cd-error)' : 'var(--cd-secondary)',
-            background: mensaje.type === 'error' ? '#fff2f0' : '#fff8e6',
+            background: 'var(--cd-chip-bg)',
             color: 'inherit'
           }}
         >
@@ -344,7 +344,7 @@ export default function VideoUploadSection() {
           borderColor: dragOver ? 'var(--cd-primary)' : 'var(--cd-border)',
           borderRadius: 16,
           padding: 20,
-          background: '#fff',
+          background: 'var(--cd-surface)',
           cursor: 'pointer'
         }}
         aria-label="Área para arrastrar y soltar archivo de video"
@@ -389,7 +389,7 @@ export default function VideoUploadSection() {
         <div style={{ height: 8 }} />
         <div className="row" style={{ alignItems: 'flex-start', gap: 12, flexWrap: 'wrap' }}>
           <div style={{ width: 280, maxWidth: '100%' }}>
-            <div className="film-thumb" style={{ position: 'relative', background: '#f5fafb' }}>
+            <div className="film-thumb" style={{ position: 'relative', background: 'var(--cd-bg)' }}>
               {coverPreview ? (
                 <img
                   src={coverPreview}
@@ -445,7 +445,7 @@ export default function VideoUploadSection() {
               style={{
                 width: '100%',
                 height: 10,
-                background: '#f0f4f5',
+                background: 'var(--cd-chip-bg)',
                 borderRadius: 999,
                 overflow: 'hidden',
                 border: '1px solid var(--cd-border)'

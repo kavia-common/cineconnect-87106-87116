@@ -47,7 +47,7 @@ export default function ChatDrawer({ open, onClose }) {
           <div ref={endRef} />
         </div>
       </div>
-      <div style={{ padding: 12, borderTop: '1px solid var(--cd-border)' }}>
+      <div style={{ padding: 12, borderTop: '1px solid var(--cd-border)', background: 'var(--cd-surface)' }}>
         <div className="row">
           <input className="input" placeholder="Say something nice..." value={text} onChange={e => setText(e.target.value)} />
           <button className="btn" onClick={send}>Send</button>

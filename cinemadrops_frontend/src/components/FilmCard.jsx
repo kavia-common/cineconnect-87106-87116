@@ -18,7 +18,7 @@ export default function FilmCard({ film }) {
 
   return (
     <Link to={`/film/${film.id}`} className="card film-card">
-      <div className="film-thumb" style={{ position: 'relative', background: '#eef6f7' }}>
+      <div className="film-thumb" style={{ position: 'relative', background: 'var(--cd-bg)' }}>
         {cover ? (
           <img
             src={cover}

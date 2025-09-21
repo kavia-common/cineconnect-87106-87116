@@ -4,6 +4,7 @@ import './index.css';
 import { ApiProvider } from './services/Api';
 import { SocketProvider } from './services/Socket';
 import { AuthProvider } from './services/Auth';
+import { ThemeProvider } from './services/Theme';
 import TopNav from './components/TopNav';
 import LeftSidebar from './components/LeftSidebar';
 import RightSidebar from './components/RightSidebar';
@@ -32,41 +33,45 @@ function App() {
 
   return (
     <BrowserRouter>
-      <ApiProvider>
-        <AuthProvider>
-          <SocketProvider>
-            <div className="app-shell">
-            <TopNav onOpenChat={() => setOpenDrawer('chat')}
-                    onOpenNotifications={() => setOpenDrawer('notif')}
-                    onOpenQuick={() => setOpenDrawer('quick')} />
-            <div className="main-grid container">
-              <aside className="sidebar">
-                <LeftSidebar />
-              </aside>
-              <main>
-                <Routes>
-                  <Route path="/" element={<Home />} />
-                  <Route path="/film/:id" element={<FilmDetails />} />
-                  <Route path="/creator/:id" element={<CreatorProfile />} />
-                  <Route path="/forums/*" element={<Forums />} />
-                  <Route path="/challenges" element={<Challenges />} />
-                  <Route path="/curated" element={<Curated />} />
-                  <Route path="/perfil" element={<Profile />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </main>
-              <aside className="rightbar">
-                <RightSidebar />
-              </aside>
-            </div>
+      <ThemeProvider>
+        <ApiProvider>
+          <AuthProvider>
+            <SocketProvider>
+              <div className="app-shell">
+                <TopNav
+                  onOpenChat={() => setOpenDrawer('chat')}
+                  onOpenNotifications={() => setOpenDrawer('notif')}
+                  onOpenQuick={() => setOpenDrawer('quick')}
+                />
+                <div className="main-grid container">
+                  <aside className="sidebar">
+                    <LeftSidebar />
+                  </aside>
+                  <main>
+                    <Routes>
+                      <Route path="/" element={<Home />} />
+                      <Route path="/film/:id" element={<FilmDetails />} />
+                      <Route path="/creator/:id" element={<CreatorProfile />} />
+                      <Route path="/forums/*" element={<Forums />} />
+                      <Route path="/challenges" element={<Challenges />} />
+                      <Route path="/curated" element={<Curated />} />
+                      <Route path="/perfil" element={<Profile />} />
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                  </main>
+                  <aside className="rightbar">
+                    <RightSidebar />
+                  </aside>
+                </div>
 
-            <ChatDrawer open={drawerApi.isOpen('chat')} onClose={drawerApi.close} />
-            <NotificationsDrawer open={drawerApi.isOpen('notif')} onClose={drawerApi.close} />
-            <QuickActionsDrawer open={drawerApi.isOpen('quick')} onClose={drawerApi.close} />
-          </div>
-          </SocketProvider>
-        </AuthProvider>
-      </ApiProvider>
+                <ChatDrawer open={drawerApi.isOpen('chat')} onClose={drawerApi.close} />
+                <NotificationsDrawer open={drawerApi.isOpen('notif')} onClose={drawerApi.close} />
+                <QuickActionsDrawer open={drawerApi.isOpen('quick')} onClose={drawerApi.close} />
+              </div>
+            </SocketProvider>
+          </AuthProvider>
+        </ApiProvider>
+      </ThemeProvider>
     </BrowserRouter>
   );
 }

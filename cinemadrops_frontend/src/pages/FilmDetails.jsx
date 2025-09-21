@@ -36,9 +36,9 @@ export default function FilmDetails() {
             <div style={{ height: 8 }} />
             <p className="muted">Photos, stories, gear lists, and production notes coming from creators.</p>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
-              <div style={{ aspectRatio: '4/3', background: '#f0f7f8', borderRadius: 12 }} />
-              <div style={{ aspectRatio: '4/3', background: '#f0f7f8', borderRadius: 12 }} />
-              <div style={{ aspectRatio: '4/3', background: '#f0f7f8', borderRadius: 12 }} />
+              <div style={{ aspectRatio: '4/3', background: 'var(--cd-chip-bg)', borderRadius: 12 }} />
+              <div style={{ aspectRatio: '4/3', background: 'var(--cd-chip-bg)', borderRadius: 12 }} />
+              <div style={{ aspectRatio: '4/3', background: 'var(--cd-chip-bg)', borderRadius: 12 }} />
             </div>
           </div>
 
