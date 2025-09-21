@@ -34,7 +34,7 @@ export default function CreatorProfile() {
         <strong>Films</strong>
         <div style={{ height: 10 }} />
         <div className="film-grid">
-          {creator.films.map(f => <FilmCard key={f.id} film={f} />)}
+          {creator.films.map((f, i) => <FilmCard key={f.id} film={f} index={i} />)}
         </div>
       </div>
 

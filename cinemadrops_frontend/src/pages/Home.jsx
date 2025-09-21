@@ -29,7 +29,7 @@ export default function Home() {
       </div>
 
       <div className="film-grid">
-        {films.map(f => <FilmCard key={f.id} film={f} />)}
+        {films.map((f, i) => <FilmCard key={f.id} film={f} index={i} />)}
       </div>
     </div>
   );
