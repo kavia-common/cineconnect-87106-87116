@@ -159,57 +159,9 @@ img { max-width: 100%; display: block; }
   border-bottom-right-radius: var(--cd-radius);
 }
 
-/* Discover two-column layout (desktop) and single-column (mobile).
-   Keep sidebar narrower to let main grid breathe. */
+/* Simplified discover layout: single column since quick tags/promo aside removed */
 .discover-layout {
-  display: grid;
-  grid-template-columns: 3fr 1.2fr; /* emphasize main content */
-  gap: 20px;
-}
-@media (max-width: 980px) {
-  .discover-layout {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* Floating Quick Picks button and drawer styles */
-.quick-picks-fab {
-  position: fixed;
-  right: 20px;
-  bottom: 20px;
-  z-index: 70;
-  background: var(--cd-secondary);
-  color: #3a2f58;
-  border: 2px solid #ffd88a;
-  border-radius: 999px;
-  padding: 12px 16px;
-  font-weight: 900;
-  box-shadow: 0 14px 36px rgba(255,182,39,.35);
-}
-.quick-picks-fab:hover { transform: translateY(-2px); }
-
-.quick-picks-drawer {
-  position: fixed;
-  right: 0;
-  bottom: 0;
-  width: min(420px, 100%);
-  max-height: 70%;
-  background: var(--cd-surface);
-  border-left: 1px solid var(--cd-border);
-  border-top: 1px solid var(--cd-border);
-  box-shadow: -10px 0 30px rgba(0,0,0,.12), 0 -10px 30px rgba(0,0,0,.08);
-  border-top-left-radius: 16px;
-  transform: translateY(110%);
-  transition: transform .25s ease;
-  z-index: 80;
-  display: flex;
-  flex-direction: column;
-}
-.quick-picks-drawer.open { transform: translateY(0); }
-.quick-picks-header { padding: 12px 14px; border-bottom: 1px solid var(--cd-border); display: flex; align-items: center; gap: 10px; }
-.quick-picks-body { padding: 12px; overflow: auto; display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-@media (max-width: 520px) {
-  .quick-picks-body { grid-template-columns: 1fr; }
+  display: block;
 }
 
 /* Dropdown menus */

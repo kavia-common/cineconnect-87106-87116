@@ -2,11 +2,10 @@ import React from 'react';
 import { useApi } from '../services/Api';
 import FilmCard from '../components/FilmCard';
 import { getCoverByIndex } from '../assets/images';
-import QuickPicks from '../components/QuickPicks';
 
 /**
  * PUBLIC_INTERFACE
- * Home displays the discover feed and film grid with responsive two-column layout and dropdown menus.
+ * Home displays only the discover feed/grid without quick tags or promos.
  */
 export default function Home() {
   const { useFetch } = useApi();
@@ -25,13 +24,6 @@ export default function Home() {
 
   const discoverOptions = ['For you', 'New', 'Rising', 'Awarded', 'Trending'];
   const tags = ['Drama', 'Comedy', 'Sci-Fi', 'Documentary', 'Animation', 'Horror', 'Experimental'];
-
-  // Centralize and deduplicate discover tags to ensure they render only once
-  const discoverTags = React.useMemo(() => {
-    const base = ['#behindthescenes', '#script', '#newvoices', '#award', '#festival'];
-    // In case future logic merges multiple arrays, keep uniqueness
-    return Array.from(new Set(base));
-  }, []);
 
   // Close on outside click/escape
   React.useEffect(() => {
@@ -70,10 +62,7 @@ export default function Home() {
         <h2 style={{ margin: 0 }}>Discover</h2>
         <div className="space" />
         {/* Discover selector dropdown */}
-        <div
-          className="dropdown"
-          ref={discoverRef}
-        >
+        <div className="dropdown" ref={discoverRef}>
           <button
             className="pill dropdown-trigger"
             aria-haspopup="menu"
@@ -111,10 +100,7 @@ export default function Home() {
         </div>
 
         {/* Filters dropdown */}
-        <div
-          className="dropdown"
-          ref={filtersRef}
-        >
+        <div className="dropdown" ref={filtersRef}>
           <button
             className="pill dropdown-trigger"
             aria-haspopup="dialog"
@@ -194,49 +180,19 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Two-column responsive layout: grid with main film grid + sidebar-like section */}
-      <div className="discover-layout">
-        <section aria-label="Film results">
-          <div className="film-grid">
-            {films.map((f, i) => (
-              <FilmCard
-                key={f.id}
-                film={f}
-                index={i}
-                image={getCoverByIndex(i)}
-              />
-            ))}
-          </div>
-        </section>
-
-        <aside aria-label="Quick tags and promos" className="card section">
-          <strong>Discover tags</strong>
-          <div style={{ height: 8 }} />
-          <div className="row" style={{ flexWrap: 'wrap' }}>
-            {discoverTags.map((h) => (
-              <button
-                key={h}
-                className="pill chip"
-                style={{ margin: 4 }}
-                onClick={() => { /* optional hook-in */ }}
-              >
-                {h}
-              </button>
-            ))}
-          </div>
-          <div style={{ height: 12 }} />
-          <div className="mini-promo">
-            <div className="mini-visual" aria-hidden="true" />
-            <div>
-              <div style={{ fontWeight: 700 }}>Join Weekly Challenge</div>
-              <div className="muted" style={{ fontSize: 12 }}>Theme: "Unexpected Kindness"</div>
-              <div style={{ height: 8 }} />
-              <a className="btn" href="/challenges">Participate</a>
-            </div>
-          </div>
-        </aside>
-      </div>
-      <QuickPicks films={films} />
+      {/* Main film grid only */}
+      <section aria-label="Film results">
+        <div className="film-grid">
+          {films.map((f, i) => (
+            <FilmCard
+              key={f.id}
+              film={f}
+              index={i}
+              image={getCoverByIndex(i)}
+            />
+          ))}
+        </div>
+      </section>
     </div>
   );
 }

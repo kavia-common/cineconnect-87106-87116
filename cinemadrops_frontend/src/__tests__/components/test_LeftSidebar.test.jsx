@@ -9,5 +9,4 @@ test('LeftSidebar shows Filters and Discover sections', () => {
   expect(screen.getByRole('combobox')).toBeInTheDocument();
   // Presence of a few tags
   expect(screen.getByRole('button', { name: /Drama/i })).toBeInTheDocument();
-  expect(screen.getByText(/#behindthescenes/i)).toBeInTheDocument();
 });
