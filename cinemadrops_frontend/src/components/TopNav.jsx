@@ -33,8 +33,9 @@ export default function TopNav() {
           onClick={toggleTheme}
           aria-label={isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
           title={isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+          style={{ width: 40, height: 40, justifyContent: 'center' }}
         >
-          {isDark ? '🌙 Oscuro' : '☀️ Claro'}
+          <span aria-hidden="true" role="img">{isDark ? '🌙' : '☀️'}</span>
         </button>
       </div>
     </div>
