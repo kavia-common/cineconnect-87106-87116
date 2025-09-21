@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
 import { useApi } from '../services/Api';
 import Comments from '../components/Comments';
@@ -11,10 +11,12 @@ import Comments from '../components/Comments';
  *  2) Otherwise, try AWS Lambda API GET /videos_shortfilms/{filenameOrId}.
  *  3) Fallback to local backend GET /films/:id (used for tests/back-compat).
  *
- * IMPORTANT (Playback):
- * - For video playback we ALWAYS construct a direct S3 URL using the s3_key field returned by the API.
- * - We do NOT use base64/file_content for the <video> player source.
- * - If S3 load fails (404 or CORS), we show clear debug info and a warning.
+ * Playback UX requirements implemented here:
+ * - The video area is visually the centerpiece (large, centered) across desktop and mobile.
+ * - Initially a large, accessible Play button is overlaid at the center of the hero area.
+ * - Only after clicking Play do we resolve the S3 URL, render the <video> element, and start playback.
+ * - Controls are hidden until Play is pressed; once playing, standard controls are shown.
+ * - The overlay respects keyboard access (Enter/Space) and screen readers (aria-label/title).
  */
 export default function FilmDetails() {
   const { id: slug } = useParams();
@@ -166,23 +168,34 @@ export default function FilmDetails() {
   const isLoading = !film && awsLoading;
   const isError = !film && !!awsError;
 
-  // Styles
-  const compactCard = {
+  // Layout styles — make the hero video area the centerpiece
+  const pageContainer = {
+    // use full width container; major emphasis on hero area
+  };
+
+  // Widen the main card to emphasize the video. It becomes the visual centerpiece.
+  const heroCard = {
     overflow: 'hidden',
     width: '100%',
-    maxWidth: 640,
+    maxWidth: 980, // larger than before to make video dominant
     margin: '0 auto',
     borderRadius: 16,
     border: '1px solid var(--cd-border)',
     background: 'var(--cd-surface)',
-    boxShadow: '0 12px 30px rgba(0,0,0,.06)',
+    boxShadow: '0 14px 36px rgba(0,0,0,.08)',
   };
 
-  const compactHeader = {
+  // Cover area that shows Play overlay until user clicks. Aspect ratio keeps it responsive.
+  const heroCover = {
+    position: 'relative',
     aspectRatio: '16/9',
     background:
       'radial-gradient(40% 50% at 20% 10%, rgba(15,163,177,.18), transparent 70%), var(--cd-gradient)',
     borderBottom: '1px solid var(--cd-border)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
   };
 
   const metaRow = {
@@ -194,7 +207,7 @@ export default function FilmDetails() {
 
   // Reactions (local)
   const randomBetween = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
-  const [reactions, setReactions] = useState(() => ({
+  const [reactions] = useState(() => ({
     dislike: randomBetween(1, 1000),
     like: film?.likes ? Math.max(0, Number(film.likes) || 0) : randomBetween(1, 1000),
     love: randomBetween(1, 1000),
@@ -247,28 +260,19 @@ export default function FilmDetails() {
     </button>
   );
 
-  // --- Robust S3-based video playback ---
-  // State for constructed S3 URL + debug
+  // --- S3-based video playback state ---
   const [videoSrc, setVideoSrc] = useState('');
   const [playLoading, setPlayLoading] = useState(false);
   const [playError, setPlayError] = useState('');
   const [playErrorDebug, setPlayErrorDebug] = useState(null);
   const [playDebugInfo, setPlayDebugInfo] = useState(null);
+  const videoRef = useRef(null);
 
   // PUBLIC_INTERFACE
   async function handlePlay() {
     /**
-     * Always use direct S3 URL built from s3_key.
-     * Steps:
-     *  1) Determine s3_key: prefer film.s3_key; else request AWS details and extract s3_key.
-     *  2) Build S3 URL using env var REACT_APP_S3_PUBLIC_BASE or fallback pattern.
-     *  3) Set <video src> to S3 URL. Do NOT use base64/file_content.
-     *  4) If the request or the <video> playback fails (404/CORS), expose debug info with constructed URL.
-     *
-     * Env:
-     *  - REACT_APP_S3_PUBLIC_BASE (Optional): e.g., https://your-bucket.s3.amazonaws.com
-     *    If missing, we attempt to infer from API fields (bucket or region) or use a generic
-     *    https://s3.amazonaws.com/<bucket>/<key> pattern when bucket is known.
+     * Construct direct S3 URL built from s3_key, then show the <video> tag and start playback.
+     * Before the click, <video> is not rendered (reduces network and avoids preloading).
      */
     setPlayLoading(true);
     setPlayError('');
@@ -276,10 +280,9 @@ export default function FilmDetails() {
     setPlayDebugInfo(null);
 
     try {
-      // 1) ensure we have AWS details to extract s3_key if not present locally
       let candidate = film || {};
-      // If we came from tests/local fallback, film likely has no s3_key - attempt to fetch AWS details
       if (!candidate.s3_key && !candidate.s3Key) {
+        // Fetch AWS details as a fallback if we don't have s3_key from state/local
         try {
           const url = buildAwsUrl(slug);
           const res = await fetch(url, { headers: { Accept: 'application/json' } });
@@ -293,12 +296,11 @@ export default function FilmDetails() {
           }
           const normalized = normalizeAwsFilmFull(body);
           candidate = { ...normalized, ...candidate };
-        } catch (e) {
-          // Non-fatal; we still show debug below
+        } catch {
+          // Non-fatal; continue with what we have
         }
       }
 
-      // Extract possible fields
       const s3Key = candidate.s3_key || candidate.s3Key || candidate.key || candidate.filename || null;
       const s3Bucket =
         candidate.bucket ||
@@ -317,20 +319,15 @@ export default function FilmDetails() {
         throw new Error('Missing s3_key for this short film. Cannot construct S3 URL.');
       }
 
-      // 2) Build S3 base
       const ENV_S3_BASE = (process.env.REACT_APP_S3_PUBLIC_BASE || '').replace(/\/$/, '');
       let s3Url = '';
       if (ENV_S3_BASE) {
-        // Case: explicit S3 public base provided
         s3Url = `${ENV_S3_BASE}/${encodeURIComponent(s3Key)}`;
       } else if (s3Bucket && region) {
-        // Virtual-hosted–style URL with region
         s3Url = `https://${s3Bucket}.s3.${region}.amazonaws.com/${encodeURIComponent(s3Key)}`;
       } else if (s3Bucket) {
-        // Generic global endpoint
         s3Url = `https://s3.amazonaws.com/${s3Bucket}/${encodeURIComponent(s3Key)}`;
       } else {
-        // As a last resort, if API exposes a direct URL field, allow it (still S3-based)
         const direct = candidate.url || candidate.link || candidate.Location || candidate.videoUrl || null;
         if (direct && /^https?:\/\//.test(direct)) {
           s3Url = direct;
@@ -339,16 +336,11 @@ export default function FilmDetails() {
         }
       }
 
-      // 3) Set the video player to use S3 URL
       setVideoSrc(s3Url);
-
-      // 4) Prepare debug info block with constructed S3 URL
       setPlayDebugInfo({
         status: 'constructed',
         statusText: 'Using S3 URL',
         url: s3Url,
-        headers: {},
-        raw: '',
         json: {
           note: 'Player is using direct S3 URL built from s3_key',
           s3_key: s3Key,
@@ -358,20 +350,23 @@ export default function FilmDetails() {
         },
         chosenSrc: s3Url,
       });
+
+      // Defer actual play to next tick once <video> mounts
+      setTimeout(() => {
+        try {
+          videoRef.current?.play?.();
+        } catch {
+          // Autoplay may be blocked; user can press play from controls
+        }
+      }, 0);
     } catch (err) {
       setPlayError(err?.message || 'Could not build the S3 video URL.');
       setPlayErrorDebug({
         message: err?.message || 'Unknown error',
-        url: (typeof err?.url === 'string' ? err.url : undefined),
       });
     } finally {
       setPlayLoading(false);
     }
-  }
-
-  // Helper: safe JSON parse for debug panel
-  function tryParseJson(text) {
-    try { return JSON.parse(text); } catch { return undefined; }
   }
 
   if (isLoading) {
@@ -426,81 +421,104 @@ export default function FilmDetails() {
   }
 
   return (
-    <div className="page-film">
-      <div className="card" style={compactCard} aria-label={`Detalle del corto ${details.videoTitle}`}>
-        {/* Hero cover with centered Play button overlay */}
-        <div
-          style={{
-            ...compactHeader,
-            position: 'relative',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            overflow: 'hidden',
-          }}
-          aria-label="Cover image"
-        >
-          <button
-            type="button"
-            onClick={handlePlay}
-            disabled={playLoading}
-            aria-label="Reproducir cortometraje"
-            title="Play"
-            style={{
-              position: 'absolute',
-              zIndex: 2,
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 8,
-              width: 88,
-              height: 88,
-              borderRadius: '999px',
-              border: '3px solid rgba(255,255,255,.9)',
-              background:
-                'radial-gradient(120px 60px at 0% 0%, rgba(255,182,39,0.3), transparent 70%), var(--cd-primary)',
-              color: '#fff',
-              fontWeight: 900,
-              fontSize: 20,
-              boxShadow: '0 20px 50px rgba(0,0,0,.35), 0 8px 22px rgba(15,163,177,.35)',
-              cursor: playLoading ? 'default' : 'pointer',
-              transform: 'translateZ(0)',
-              transition: 'transform .15s ease, box-shadow .2s ease, filter .2s ease, opacity .2s ease',
-              outline: 'none',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'scale(1.04)';
-              e.currentTarget.style.boxShadow = '0 24px 60px rgba(0,0,0,.38), 0 10px 26px rgba(255,182,39,.30)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'scale(1.0)';
-              e.currentTarget.style.boxShadow = '0 20px 50px rgba(0,0,0,.35), 0 8px 22px rgba(15,163,177,.35)';
-            }}
-            onFocus={(e) => {
-              e.currentTarget.style.boxShadow = '0 0 0 4px rgba(255,255,255,.6), 0 12px 30px rgba(0,0,0,.35)';
-            }}
-            onBlur={(e) => {
-              e.currentTarget.style.boxShadow = '0 20px 50px rgba(0,0,0,.35), 0 8px 22px rgba(15,163,177,.35)';
-            }}
-          >
-            {playLoading ? '…' : '▶'}
-          </button>
+    <div className="page-film" style={pageContainer}>
+      <div className="card" style={heroCard} aria-label={`Detalle del corto ${details.videoTitle}`}>
+        {/* Hero area:
+            - Before clicking Play: big overlay Play button on a decorative cover area.
+            - After clicking Play: render video element (controls appear) and attempt autoplay. */}
+        <div style={heroCover} aria-label="Video area">
+          {!videoSrc && (
+            <>
+              <button
+                type="button"
+                onClick={handlePlay}
+                disabled={playLoading}
+                aria-label="Play short film"
+                title="Play"
+                style={{
+                  position: 'absolute',
+                  zIndex: 2,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                  width: 96,
+                  height: 96,
+                  borderRadius: '999px',
+                  border: '3px solid rgba(255,255,255,.95)',
+                  background:
+                    'radial-gradient(120px 60px at 0% 0%, rgba(255,182,39,0.34), transparent 70%), var(--cd-primary)',
+                  color: '#fff',
+                  fontWeight: 900,
+                  fontSize: 22,
+                  boxShadow: '0 22px 56px rgba(0,0,0,.38), 0 8px 22px rgba(15,163,177,.35)',
+                  cursor: playLoading ? 'default' : 'pointer',
+                  transform: 'translateZ(0)',
+                  transition: 'transform .15s ease, box-shadow .2s ease, filter .2s ease, opacity .2s ease',
+                  outline: 'none',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'scale(1.05)';
+                  e.currentTarget.style.boxShadow = '0 26px 64px rgba(0,0,0,.42), 0 10px 26px rgba(255,182,39,.30)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'scale(1.0)';
+                  e.currentTarget.style.boxShadow = '0 22px 56px rgba(0,0,0,.38), 0 8px 22px rgba(15,163,177,.35)';
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.boxShadow = '0 0 0 4px rgba(255,255,255,.7), 0 12px 30px rgba(0,0,0,.35)';
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.boxShadow = '0 22px 56px rgba(0,0,0,.38), 0 8px 22px rgba(15,163,177,.35)';
+                }}
+              >
+                {playLoading ? '…' : '▶'}
+              </button>
+              {/* Contrast overlay to ensure the Play button is legible */}
+              <div
+                aria-hidden="true"
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  background: 'linear-gradient(180deg, rgba(0,0,0,.18) 0%, rgba(0,0,0,.32) 100%)',
+                  pointerEvents: 'none',
+                  zIndex: 1,
+                }}
+              />
+            </>
+          )}
 
-          {/* Optional decorative overlay to ensure contrast on any background */}
-          <div
-            aria-hidden="true"
-            style={{
-              position: 'absolute',
-              inset: 0,
-              background: 'linear-gradient(180deg, rgba(0,0,0,.25) 0%, rgba(0,0,0,.35) 100%)',
-              pointerEvents: 'none',
-              zIndex: 1,
-            }}
-          />
+          {videoSrc && (
+            <div style={{ position: 'absolute', inset: 0, background: '#000', display: 'grid' }}>
+              <video
+                ref={videoRef}
+                controls
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'contain',
+                  background: '#000',
+                  display: 'block',
+                }}
+                src={videoSrc}
+                onError={(e) => {
+                  const media = e?.currentTarget;
+                  const src = media?.currentSrc || videoSrc;
+                  setPlayError('Video failed to load. Possible 404 or CORS issue with the S3 URL.');
+                  setPlayErrorDebug((prev) => ({
+                    ...(prev || {}),
+                    message: 'HTML5 video error on S3 URL',
+                    url: src,
+                    statusText: 'Playback error (network/CORS/404)',
+                  }));
+                }}
+              />
+            </div>
+          )}
         </div>
 
-        <div style={{ padding: 14 }}>
-          <h2 style={{ margin: '6px 0', fontSize: '1.15rem', lineHeight: 1.3 }}>{details.videoTitle}</h2>
+        <div style={{ padding: 16 }}>
+          <h2 style={{ margin: '6px 0', fontSize: '1.22rem', lineHeight: 1.3 }}>{details.videoTitle}</h2>
           <div className="row" style={metaRow}>
             <span className="pill" style={{ padding: '6px 10px', fontSize: 13 }}>by {details.videoAuthor}</span>
             <span className="pill" style={{ padding: '6px 10px', fontSize: 13 }}>⏱ {film.duration} min</span>
@@ -515,7 +533,7 @@ export default function FilmDetails() {
             <span className="pill" style={{ padding: '6px 10px', fontSize: 12 }}>📄 {details.videoFilename}</span>
           </div>
 
-          {/* Reactions row */}
+          {/* Reactions */}
           <div style={{ height: 10 }} />
           <div className="row" style={{ flexWrap: 'wrap', gap: 8 }}>
             <ReactionButton
@@ -552,9 +570,7 @@ export default function FilmDetails() {
             />
           </div>
 
-          <p className="muted" style={{ marginTop: 8, fontSize: 14, lineHeight: 1.45 }}>{film.description}</p>
-
-          {/* Inline player status after clicking Play */}
+          {/* Inline player state & debug */}
           <div style={{ height: 10 }} />
           <div className="row" style={{ gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
             {playLoading && <span className="muted" role="status">Loading video from S3...</span>}
@@ -565,7 +581,6 @@ export default function FilmDetails() {
             )}
           </div>
 
-          {/* DEBUG PANEL: Video fetch/URL construction info */}
           {playErrorDebug && (
             <div
               className="pill"
@@ -582,22 +597,9 @@ export default function FilmDetails() {
             >
               <strong style={{ display: 'block', marginBottom: 6 }}>Debug Info (Video Load)</strong>
               <div><strong>Message:</strong> {String(playErrorDebug.message || '')}</div>
-              {playErrorDebug.status !== undefined && (
-                <div><strong>Status:</strong> {String(playErrorDebug.status)} {playErrorDebug.statusText ? `- ${playErrorDebug.statusText}` : ''}</div>
-              )}
               {playErrorDebug.url && <div><strong>URL:</strong> {playErrorDebug.url}</div>}
-              {playErrorDebug.responseText && (
-                <details style={{ marginTop: 6 }}>
-                  <summary>Raw response</summary>
-                  <pre style={{ overflowX: 'auto' }}>{playErrorDebug.responseText}</pre>
-                </details>
-              )}
               <div style={{ marginTop: 8 }} className="muted">
-                If the video fails to play, verify:
-                <ul style={{ marginTop: 6 }}>
-                  <li>S3 object exists at the constructed path (404 indicates missing key).</li>
-                  <li>CORS configuration on the S3 bucket allows GET from this origin.</li>
-                </ul>
+                Verify S3 key exists and CORS allows GET from this origin.
               </div>
             </div>
           )}
@@ -620,53 +622,8 @@ export default function FilmDetails() {
                 <span className="pill">URL</span>
                 <code style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>{playDebugInfo.url}</code>
               </div>
-              <div style={{ height: 8 }} />
-              <details>
-                <summary>JSON</summary>
-                <pre style={{ overflowX: 'auto' }}>{JSON.stringify(playDebugInfo.json || {}, null, 2)}</pre>
-              </details>
-              <div style={{ height: 8 }} />
-              <div>
-                <strong>Chosen video src:</strong>
-                <div className="pill" style={{ display: 'inline-flex', marginTop: 6 }}>
-                  {playDebugInfo.chosenSrc || '—'}
-                </div>
-              </div>
-              <div style={{ height: 8 }} />
-              <div className="muted" style={{ fontSize: 12 }}>
-                Note: If this S3 URL returns 404 or is blocked by CORS, the player will not load. Check S3 ACL/CORS.
-              </div>
             </div>
           )}
-
-          {/* Video player appears after we have a source */}
-          {videoSrc ? (
-            <>
-              <div style={{ height: 10 }} />
-              <div style={{ background: '#000', borderRadius: 12, overflow: 'hidden', border: '1px solid var(--cd-border)' }}>
-                <video
-                  controls
-                  style={{ width: '100%', height: 'auto', display: 'block' }}
-                  src={videoSrc}
-                  onError={(e) => {
-                    // Surface a succinct warning with the exact source that failed
-                    const media = e?.currentTarget;
-                    const src = media?.currentSrc || videoSrc;
-                    setPlayError('Video failed to load. Possible 404 or CORS issue with the S3 URL.');
-                    setPlayErrorDebug((prev) => ({
-                      ...(prev || {}),
-                      message: 'HTML5 video error on S3 URL',
-                      url: src,
-                      statusText: 'Playback error (network/CORS/404)',
-                    }));
-                  }}
-                />
-              </div>
-              <div className="muted" style={{ fontSize: 12, marginTop: 6 }}>
-                Source: S3 URL
-              </div>
-            </>
-          ) : null}
         </div>
       </div>
 
