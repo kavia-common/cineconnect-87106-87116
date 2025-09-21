@@ -35,7 +35,11 @@ export default function Home() {
       </div>
       <div className="discover-section card section" style={{ marginTop: 0 }}>
         <div className="film-grid">
-          {filtered.map(f => <FilmCard key={f.id} film={f} />)}
+          {filtered.map(f => {
+            // Simple heuristic: mark high-like films as trending
+            const isTrending = Number(f.likes || 0) >= 700;
+            return <FilmCard key={f.id} film={f} trending={isTrending} />;
+          })}
         </div>
       </div>
     </div>

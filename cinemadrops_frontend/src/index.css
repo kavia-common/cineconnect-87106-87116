@@ -241,6 +241,30 @@ img { max-width: 100%; display: block; }
 
 .film-meta { padding: 18px; display: grid; gap: 6px; }
 
+/* Trending film card modifier: adds extra internal padding and a playful highlight */
+.film-card.trending .film-meta {
+  padding: 24px; /* increased padding vs regular 18px */
+}
+
+.film-card.trending .film-thumb .badge {
+  transform: scale(1.05);
+  box-shadow: 0 10px 26px rgba(15,163,177,0.25);
+}
+
+/* Subtle fun outline and glow to stand out while keeping grid intact */
+.film-card.trending {
+  outline: 2px dashed rgba(15,163,177,0.28);
+  outline-offset: 2px;
+  box-shadow: 0 12px 34px rgba(15,163,177,0.12), 0 10px 30px rgba(0,0,0,0.06);
+}
+
+/* Responsive tuning: keep it comfy on small screens */
+@media (max-width: 700px) {
+  .film-card.trending .film-meta {
+    padding: 20px; /* still larger than normal mobile (16px) */
+  }
+}
+
 @media (max-width: 700px) {
   .film-card {
     margin: 6px; /* a tad more breathing space on tight layouts */

@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom';
  * FilmCard renders a short film card with playful style.
  * Soporta mostrar una imagen de portada si está disponible en film.cover_image|cover|thumbnail|poster.
  */
-export default function FilmCard({ film }) {
+export default function FilmCard({ film, trending = false }) {
   const cover =
     film?.cover_image ||
     film?.cover ||
@@ -17,7 +17,7 @@ export default function FilmCard({ film }) {
     null;
 
   return (
-    <Link to={`/film/${film.id}`} className="card film-card" style={{ textDecoration: 'none' }}>
+    <Link to={`/film/${film.id}`} className={`card film-card${trending ? ' trending' : ''}`} style={{ textDecoration: 'none' }}>
       <div className="film-thumb" style={{ position: 'relative', background: 'var(--cd-bg)' }}>
         {cover ? (
           <img
