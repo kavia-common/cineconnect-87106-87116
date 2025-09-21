@@ -43,8 +43,39 @@ export default function Home() {
     });
   }, [films, duration, activeTags]);
 
-  // Choose a default placeholder image from packaged assets (used for all cards)
-  const defaultPlaceholder = '/assets/pexels-amar-29656074.jpg';
+  // Build a gallery of asset images to rotate through for visual variety.
+  const assetGallery = [
+    '/assets/pexels-amar-29656074.jpg',
+    '/assets/pexels-jillyjillystudio-33962662.jpg',
+    '/assets/pexels-delot-29721171.jpg',
+    '/assets/pexels-andreas-schnabl-1775843-19321355.jpg',
+    '/assets/pexels-chriszwettler-9407824.jpg',
+    '/assets/pexels-alvarobalderas-20747775.jpg',
+    '/assets/pexels-kalistro666-29263909.jpg',
+    '/assets/pexels-guillermo-berlin-1524368912-30068229.jpg',
+  ];
+
+  // Default placeholder if no assets resolve for any reason.
+  const defaultPlaceholder = assetGallery[0];
+
+  // Helper to pick an image for each card:
+  // 1) Respect film-provided cover fields if they exist.
+  // 2) Otherwise assign one from assetGallery, cycling by index.
+  const pickPreviewImage = (film, index) => {
+    const filmImage =
+      film.cover_image ||
+      film.cover ||
+      film.coverUrl ||
+      film.thumbnail ||
+      film.thumbnailUrl ||
+      film.poster ||
+      null;
+
+    if (filmImage) return filmImage;
+
+    if (assetGallery.length === 0) return defaultPlaceholder;
+    return assetGallery[index % assetGallery.length];
+  };
 
   return (
     <div className="page-home">
@@ -102,12 +133,12 @@ export default function Home() {
       <div style={{ height: 12 }} />
 
       <div className="film-grid">
-        {filtered.map(f => (
+        {filtered.map((f, idx) => (
           <FilmCard
             key={f.id}
             film={f}
-            // Always use a static demo image for now (test requirement)
             placeholderImage={defaultPlaceholder}
+            previewImage={pickPreviewImage(f, idx)}
           />
         ))}
       </div>

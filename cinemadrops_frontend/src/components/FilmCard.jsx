@@ -4,12 +4,17 @@ import { Link } from 'react-router-dom';
 /**
  * PUBLIC_INTERFACE
  * FilmCard renders a short film card with playful style.
- * For Discover testing, it always displays a static image in the preview area,
- * without requiring any asset/thumbnail fields from the film object.
+ * For Discover testing it can display a provided preview image.
+ * If previewImage is not provided, it falls back to placeholderImage.
  */
-export default function FilmCard({ film, placeholderImage = '/assets/pexels-amar-29656074.jpg' }) {
-  // Always render a static image in the preview area for test/demo purposes.
-  // We ignore any asset/thumbnail fields to ensure consistency across all cards.
+// PUBLIC_INTERFACE
+export default function FilmCard({
+  film,
+  placeholderImage = '/assets/pexels-amar-29656074.jpg',
+  previewImage,
+}) {
+  // Prefer previewImage when provided, otherwise use placeholderImage.
+  const src = previewImage || placeholderImage;
 
   return (
     <Link to={`/film/${film.id}`} className="card film-card" style={{ textDecoration: 'none' }}>
@@ -19,7 +24,7 @@ export default function FilmCard({ film, placeholderImage = '/assets/pexels-amar
         aria-label={`Tarjeta de video ${film.title}`}
       >
         <img
-          src={placeholderImage}
+          src={src}
           alt={`Preview de ${film.title}`}
           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
         />
