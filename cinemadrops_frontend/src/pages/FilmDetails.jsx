@@ -99,6 +99,73 @@ export default function FilmDetails() {
   // Choose which film to show: prefer state → aws → local
   const film = useMemo(() => filmFromState || awsFilm || localFilm, [filmFromState, awsFilm, localFilm]);
 
+  // PUBLIC_INTERFACE
+  /**
+   * mapVideoDetails normalizes the video metadata fields to the expected UI labels,
+   * aligning with the API field names requested in the task:
+   *  - videoTitle:   videoData.title || videoData.filename || 'Unknown Title'
+   *  - videoAuthor:  videoData.author || 'Unknown Author'
+   *  - videoGenre:   videoData.genre || 'Unknown Genre'
+   *  - videoDate:    videoData.upload_date (formatted with toLocaleDateString()) or '-'
+   *  - videoSize:    videoData.size_mb + ' MB' if present, otherwise '-'
+   *  - videoFilename: videoData.filename || '-'
+   */
+  function mapVideoDetails(videoData) {
+    const safe = videoData || {};
+    // Derive the best title:
+    const videoTitle =
+      safe.title ||
+      (typeof safe.filename === 'string' ? safe.filename.replace(/\.[^/.]+$/, '') : safe.filename) ||
+      'Unknown Title';
+
+    // Derive other fields with defaults:
+    const videoAuthor = safe.author || 'Unknown Author';
+    const videoGenre = safe.genre || 'Unknown Genre';
+
+    // Date: prefer upload_date from API; fallback to other common fields if present
+    const rawDate =
+      safe.upload_date ||
+      safe.uploadDate ||
+      safe.fecha_subida ||
+      safe.date ||
+      safe.createdAt ||
+      safe.LastModified ||
+      null;
+
+    let videoDate = '-';
+    try {
+      if (rawDate) {
+        const d = new Date(rawDate);
+        if (!isNaN(d.getTime())) {
+          videoDate = d.toLocaleDateString();
+        }
+      }
+    } catch {
+      videoDate = '-';
+    }
+
+    // Size (MB): prefer size_mb; if numeric, append suffix, else '-'
+    const sz = safe.size_mb;
+    const videoSize =
+      typeof sz === 'number' && isFinite(sz)
+        ? `${sz} MB`
+        : (typeof sz === 'string' && sz.trim() ? `${sz} MB` : '-');
+
+    const videoFilename = safe.filename || '-';
+
+    return {
+      videoTitle,
+      videoAuthor,
+      videoGenre,
+      videoDate,
+      videoSize,
+      videoFilename,
+    };
+  }
+
+  // Compute normalized details for the currently selected film object so the UI can use stable names.
+  const details = useMemo(() => mapVideoDetails(film || {}), [film]);
+
   // Loading/error states - show loading only if we don't have any film yet
   const isLoading = !film && (awsLoading);
   const isError = !film && (!!awsError);
@@ -388,7 +455,7 @@ export default function FilmDetails() {
 
   return (
     <div className="page-film">
-      <div className="card" style={compactCard} aria-label={`Detalle del corto ${film.title}`}>
+      <div className="card" style={compactCard} aria-label={`Detalle del corto ${details.videoTitle}`}>
         {/* Hero cover with centered Play button overlay */}
         <div
           style={{
@@ -461,11 +528,19 @@ export default function FilmDetails() {
         </div>
 
         <div style={{ padding: 14 }}>
-          <h2 style={{ margin: '6px 0', fontSize: '1.15rem', lineHeight: 1.3 }}>{film.title}</h2>
+          <h2 style={{ margin: '6px 0', fontSize: '1.15rem', lineHeight: 1.3 }}>{details.videoTitle}</h2>
           <div className="row" style={metaRow}>
-            <span className="pill" style={{ padding: '6px 10px', fontSize: 13 }}>by {film.author}</span>
+            <span className="pill" style={{ padding: '6px 10px', fontSize: 13 }}>by {details.videoAuthor}</span>
             <span className="pill" style={{ padding: '6px 10px', fontSize: 13 }}>⏱ {film.duration} min</span>
             <span className="pill" style={{ padding: '6px 10px', fontSize: 13 }}>★ {film.likes}</span>
+          </div>
+
+          {/* Additional normalized metadata aligned with API (genre, date, size, filename) */}
+          <div className="row" style={{ gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
+            <span className="pill" style={{ padding: '6px 10px', fontSize: 12 }}>🎭 {details.videoGenre}</span>
+            <span className="pill" style={{ padding: '6px 10px', fontSize: 12 }}>📅 {details.videoDate}</span>
+            <span className="pill" style={{ padding: '6px 10px', fontSize: 12 }}>💾 {details.videoSize}</span>
+            <span className="pill" style={{ padding: '6px 10px', fontSize: 12 }}>📄 {details.videoFilename}</span>
           </div>
 
           {/* Reactions row */}
@@ -577,7 +652,7 @@ export default function FilmDetails() {
             </ul>
           </div>
           <div className="card section">
-            <strong>More by {film.author}</strong>
+            <strong>More by {details.videoAuthor}</strong>
             <div style={{ height: 8 }} />
             <div className="row" style={{ flexWrap: 'wrap' }}>
               {Array.isArray(film.more) ? film.more.map(m => <span key={m} className="pill" style={{ margin: 4 }}>{m}</span>) : null}
