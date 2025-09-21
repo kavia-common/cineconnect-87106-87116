@@ -11,34 +11,35 @@ import Comments from '../components/Comments';
  *  2) Otherwise, try AWS Lambda API GET /videos_shortfilms/{filenameOrId}.
  *  3) Fallback to local backend GET /films/:id (used for tests/back-compat).
  *
- * Playback UX requirements implemented here:
- * - The video area is visually the centerpiece (large, centered) across desktop and mobile.
- * - Initially a large, accessible Play button is overlaid at the center of the hero area.
- * - Only after clicking Play do we resolve the S3 URL, render the <video> element, and start playback.
- * - Controls are hidden until Play is pressed; once playing, standard controls are shown.
- * - The overlay respects keyboard access (Enter/Space) and screen readers (aria-label/title).
+ * Playback UX:
+ * - The video area is visually the centerpiece.
+ * - Initially an accessible Play button overlays the hero area; after clicking, the <video> appears.
  */
 export default function FilmDetails() {
   const { id: slug } = useParams();
   const location = useLocation();
   const { useFetch } = useApi();
 
-  // If we navigated with state, prefer it (instant)
+  // Prefer state if available for instant render
   const filmFromState = location?.state?.film || null;
 
   // Local backend fetch (used for tests/backward compatibility) - only if no state and as fallback
-  const { data: localFilm } = useFetch(filmFromState ? null : `/films/${slug}`, { fallbackData: filmFromState ? undefined : fallback(slug) });
+  const { data: localFilm } = useFetch(
+    filmFromState ? null : `/films/${slug}`,
+    { fallbackData: filmFromState ? undefined : fallback(slug) }
+  );
 
   // AWS Lambda fetch for real shortfilm details by filename - only if no state
-  const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || process.env.REACT_APP_API_BASE || 'https://s4myuxoa90.execute-api.us-east-2.amazonaws.com/devops';
-  const buildAwsUrl = (filename) => `${API_BASE_URL.replace(/\/$/, '')}/videos_shortfilms/${encodeURIComponent(filename)}`;
+  const API_BASE_URL =
+    process.env.REACT_APP_API_BASE_URL ||
+    process.env.REACT_APP_API_BASE ||
+    'https://s4myuxoa90.execute-api.us-east-2.amazonaws.com/devops';
+  const buildAwsUrl = (filename) =>
+    `${API_BASE_URL.replace(/\/$/, '')}/videos_shortfilms/${encodeURIComponent(filename)}`;
 
   const [awsFilm, setAwsFilm] = useState(null);
   const [awsLoading, setAwsLoading] = useState(!filmFromState);
   const [awsError, setAwsError] = useState(null);
-
-  // DEBUG STATE for API errors (details + raw)
-  const [awsErrorDebug, setAwsErrorDebug] = useState(null); // { message, status, statusText, url, responseText? }
 
   useEffect(() => {
     if (filmFromState) {
@@ -49,23 +50,11 @@ export default function FilmDetails() {
     async function fetchAws() {
       setAwsLoading(true);
       setAwsError(null);
-      setAwsErrorDebug(null);
       try {
         const url = buildAwsUrl(slug);
         const res = await fetch(url, { headers: { Accept: 'application/json' } });
         if (!res.ok) {
-          let responseText = '';
-          try { responseText = await res.text(); } catch { /* ignore */ }
-          const errObj = {
-            message: `HTTP ${res.status} ${res.statusText}`,
-            status: res.status,
-            statusText: res.statusText,
-            url,
-            responseText,
-          };
-          // eslint-disable-next-line no-console
-          console.error('[FilmDetails][AWS fetch error]', errObj);
-          throw Object.assign(new Error(errObj.message), errObj);
+          throw new Error(`HTTP ${res.status} ${res.statusText}`);
         }
         const ct = res.headers.get('content-type') || '';
         let body;
@@ -78,16 +67,7 @@ export default function FilmDetails() {
         const item = normalizeAwsFilm(body, slug);
         if (!cancelled) setAwsFilm(item);
       } catch (e) {
-        if (!cancelled) {
-          setAwsError(e);
-          setAwsErrorDebug({
-            message: e?.message || 'Unknown error',
-            status: e?.status ?? undefined,
-            statusText: e?.statusText ?? undefined,
-            url: e?.url ?? undefined,
-            responseText: e?.responseText ?? undefined,
-          });
-        }
+        if (!cancelled) setAwsError(e);
       } finally {
         if (!cancelled) setAwsLoading(false);
       }
@@ -97,25 +77,22 @@ export default function FilmDetails() {
   }, [slug, filmFromState]);
 
   // Choose which film to show: prefer state → aws → local
-  const film = useMemo(() => filmFromState || awsFilm || localFilm, [filmFromState, awsFilm, localFilm]);
+  const film = useMemo(
+    () => filmFromState || awsFilm || localFilm,
+    [filmFromState, awsFilm, localFilm]
+  );
 
   // PUBLIC_INTERFACE
   /**
-   * mapVideoDetails normalizes the video metadata fields to the expected UI labels,
-   * aligning with typical fields:
-   *  - videoTitle:   title || filename
-   *  - videoAuthor:  author
-   *  - videoGenre:   genre
-   *  - videoDate:    upload_date formatted or '-'
-   *  - videoSize:    size_mb -> "X MB" or '-'
-   *  - videoFilename: filename or '-'
-   *  - s3Key: s3_key (for constructing S3 URLs)
+   * mapVideoDetails normalizes the video metadata fields to the expected UI labels.
    */
   function mapVideoDetails(videoData) {
     const safe = videoData || {};
     const videoTitle =
       safe.title ||
-      (typeof safe.filename === 'string' ? safe.filename.replace(/\.[^/.]+$/, '') : safe.filename) ||
+      (typeof safe.filename === 'string'
+        ? safe.filename.replace(/\.[^/.]+$/, '')
+        : safe.filename) ||
       'Unknown Title';
 
     const videoAuthor = safe.author || 'Unknown Author';
@@ -168,24 +145,18 @@ export default function FilmDetails() {
   const isLoading = !film && awsLoading;
   const isError = !film && !!awsError;
 
-  // Layout styles — make the hero video area the centerpiece
-  const pageContainer = {
-    // use full width container; major emphasis on hero area
-  };
-
-  // Widen the main card to emphasize the video. It becomes the visual centerpiece.
+  // Layout styles
+  const pageContainer = {};
   const heroCard = {
     overflow: 'hidden',
     width: '100%',
-    maxWidth: 980, // larger than before to make video dominant
+    maxWidth: 980,
     margin: '0 auto',
     borderRadius: 16,
     border: '1px solid var(--cd-border)',
     background: 'var(--cd-surface)',
     boxShadow: '0 14px 36px rgba(0,0,0,.08)',
   };
-
-  // Cover area that shows Play overlay until user clicks. Aspect ratio keeps it responsive.
   const heroCover = {
     position: 'relative',
     aspectRatio: '16/9',
@@ -197,7 +168,6 @@ export default function FilmDetails() {
     justifyContent: 'center',
     overflow: 'hidden',
   };
-
   const metaRow = {
     display: 'flex',
     alignItems: 'center',
@@ -264,25 +234,16 @@ export default function FilmDetails() {
   const [videoSrc, setVideoSrc] = useState('');
   const [playLoading, setPlayLoading] = useState(false);
   const [playError, setPlayError] = useState('');
-  const [playErrorDebug, setPlayErrorDebug] = useState(null);
-  const [playDebugInfo, setPlayDebugInfo] = useState(null);
   const videoRef = useRef(null);
 
   // PUBLIC_INTERFACE
   async function handlePlay() {
-    /**
-     * Construct direct S3 URL built from s3_key, then show the <video> tag and start playback.
-     * Before the click, <video> is not rendered (reduces network and avoids preloading).
-     */
     setPlayLoading(true);
     setPlayError('');
-    setPlayErrorDebug(null);
-    setPlayDebugInfo(null);
 
     try {
       let candidate = film || {};
       if (!candidate.s3_key && !candidate.s3Key) {
-        // Fetch AWS details as a fallback if we don't have s3_key from state/local
         try {
           const url = buildAwsUrl(slug);
           const res = await fetch(url, { headers: { Accept: 'application/json' } });
@@ -297,7 +258,7 @@ export default function FilmDetails() {
           const normalized = normalizeAwsFilmFull(body);
           candidate = { ...normalized, ...candidate };
         } catch {
-          // Non-fatal; continue with what we have
+          // continue with what we have
         }
       }
 
@@ -337,33 +298,17 @@ export default function FilmDetails() {
       }
 
       setVideoSrc(s3Url);
-      setPlayDebugInfo({
-        status: 'constructed',
-        statusText: 'Using S3 URL',
-        url: s3Url,
-        json: {
-          note: 'Player is using direct S3 URL built from s3_key',
-          s3_key: s3Key,
-          bucket: s3Bucket,
-          region,
-          envBase: process.env.REACT_APP_S3_PUBLIC_BASE || null,
-        },
-        chosenSrc: s3Url,
-      });
 
       // Defer actual play to next tick once <video> mounts
       setTimeout(() => {
         try {
           videoRef.current?.play?.();
         } catch {
-          // Autoplay may be blocked; user can press play from controls
+          // Autoplay may be blocked
         }
       }, 0);
     } catch (err) {
       setPlayError(err?.message || 'Could not build the S3 video URL.');
-      setPlayErrorDebug({
-        message: err?.message || 'Unknown error',
-      });
     } finally {
       setPlayLoading(false);
     }
@@ -381,33 +326,6 @@ export default function FilmDetails() {
     return (
       <div className="card section" role="alert">
         Could not load the film details.
-        {awsErrorDebug && (
-          <div
-            className="pill"
-            style={{
-              marginTop: 10,
-              whiteSpace: 'pre-wrap',
-              wordBreak: 'break-word',
-              background: 'var(--cd-chip-bg)',
-              borderColor: 'var(--cd-error)',
-              color: 'inherit',
-              display: 'block'
-            }}
-          >
-            <strong style={{ display: 'block', marginBottom: 6 }}>Debug Info (Film Details Error)</strong>
-            <div><strong>Message:</strong> {String(awsErrorDebug.message || '')}</div>
-            {awsErrorDebug.status !== undefined && (
-              <div><strong>Status:</strong> {String(awsErrorDebug.status)} {awsErrorDebug.statusText ? `- ${awsErrorDebug.statusText}` : ''}</div>
-            )}
-            {awsErrorDebug.url && <div><strong>URL:</strong> {awsErrorDebug.url}</div>}
-            {awsErrorDebug.responseText && (
-              <details style={{ marginTop: 6 }}>
-                <summary>Raw response</summary>
-                <pre style={{ overflowX: 'auto' }}>{awsErrorDebug.responseText}</pre>
-              </details>
-            )}
-          </div>
-        )}
       </div>
     );
   }
@@ -423,9 +341,7 @@ export default function FilmDetails() {
   return (
     <div className="page-film" style={pageContainer}>
       <div className="card" style={heroCard} aria-label={`Detalle del corto ${details.videoTitle}`}>
-        {/* Hero area:
-            - Before clicking Play: big overlay Play button on a decorative cover area.
-            - After clicking Play: render video element (controls appear) and attempt autoplay. */}
+        {/* Hero area */}
         <div style={heroCover} aria-label="Video area">
           {!videoSrc && (
             <>
@@ -474,7 +390,6 @@ export default function FilmDetails() {
               >
                 {playLoading ? '…' : '▶'}
               </button>
-              {/* Contrast overlay to ensure the Play button is legible */}
               <div
                 aria-hidden="true"
                 style={{
@@ -501,16 +416,8 @@ export default function FilmDetails() {
                   display: 'block',
                 }}
                 src={videoSrc}
-                onError={(e) => {
-                  const media = e?.currentTarget;
-                  const src = media?.currentSrc || videoSrc;
-                  setPlayError('Video failed to load. Possible 404 or CORS issue with the S3 URL.');
-                  setPlayErrorDebug((prev) => ({
-                    ...(prev || {}),
-                    message: 'HTML5 video error on S3 URL',
-                    url: src,
-                    statusText: 'Playback error (network/CORS/404)',
-                  }));
+                onError={() => {
+                  setPlayError('Video failed to load. Please try again later.');
                 }}
               />
             </div>
@@ -525,7 +432,6 @@ export default function FilmDetails() {
             <span className="pill" style={{ padding: '6px 10px', fontSize: 13 }}>★ {film.likes}</span>
           </div>
 
-          {/* Additional normalized metadata aligned with API (genre, date, size, filename) */}
           <div className="row" style={{ gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
             <span className="pill" style={{ padding: '6px 10px', fontSize: 12 }}>🎭 {details.videoGenre}</span>
             <span className="pill" style={{ padding: '6px 10px', fontSize: 12 }}>📅 {details.videoDate}</span>
@@ -533,7 +439,6 @@ export default function FilmDetails() {
             <span className="pill" style={{ padding: '6px 10px', fontSize: 12 }}>📄 {details.videoFilename}</span>
           </div>
 
-          {/* Reactions */}
           <div style={{ height: 10 }} />
           <div className="row" style={{ flexWrap: 'wrap', gap: 8 }}>
             <ReactionButton
@@ -570,60 +475,15 @@ export default function FilmDetails() {
             />
           </div>
 
-          {/* Inline player state & debug */}
           <div style={{ height: 10 }} />
           <div className="row" style={{ gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-            {playLoading && <span className="muted" role="status">Loading video from S3...</span>}
+            {playLoading && <span className="muted" role="status">Loading video…</span>}
             {playError && (
               <span className="pill" role="alert" style={{ borderColor: 'var(--cd-error)', color: 'var(--cd-text)' }}>
-                Error: {playError}
+                {playError}
               </span>
             )}
           </div>
-
-          {playErrorDebug && (
-            <div
-              className="pill"
-              style={{
-                marginTop: 10,
-                background: 'var(--cd-chip-bg)',
-                borderColor: 'var(--cd-error)',
-                color: 'inherit',
-                display: 'block',
-                whiteSpace: 'pre-wrap',
-                wordBreak: 'break-word'
-              }}
-              role="status"
-            >
-              <strong style={{ display: 'block', marginBottom: 6 }}>Debug Info (Video Load)</strong>
-              <div><strong>Message:</strong> {String(playErrorDebug.message || '')}</div>
-              {playErrorDebug.url && <div><strong>URL:</strong> {playErrorDebug.url}</div>}
-              <div style={{ marginTop: 8 }} className="muted">
-                Verify S3 key exists and CORS allows GET from this origin.
-              </div>
-            </div>
-          )}
-
-          {playDebugInfo && (
-            <div
-              className="card section"
-              style={{
-                marginTop: 10,
-                border: '1px dashed var(--cd-border)',
-                background: 'var(--cd-chip-bg)',
-                color: 'inherit',
-              }}
-              role="status"
-            >
-              <strong>Debug: Video Source</strong>
-              <div style={{ height: 6 }} />
-              <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
-                <span className="pill">{String(playDebugInfo.status)}</span>
-                <span className="pill">URL</span>
-                <code style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>{playDebugInfo.url}</code>
-              </div>
-            </div>
-          )}
         </div>
       </div>
 
@@ -693,7 +553,6 @@ function normalizeAwsFilmFull(body) {
     scriptSnippet: root.scriptSnippet || root.notes || 'Scene opens with a quiet street. Footsteps echo...',
     crew: Array.isArray(root.crew) ? root.crew : ['Director: Unknown', 'DOP: Unknown', 'Editor: Unknown'],
     more: Array.isArray(root.more) ? root.more : [],
-    // Fields relevant for playback
     filename,
     s3_key: root.s3_key || root.key || filename || null,
     bucket: root.bucket || root.s3_bucket || root.Bucket || null,
@@ -734,7 +593,6 @@ function normalizeAwsFilm(body, slug) {
       ? src.crew
       : ['Director: Unknown', 'DOP: Unknown', 'Editor: Unknown'],
     more: Array.isArray(src?.more) ? src.more : [],
-    // carry-through potential playback fields if present
     s3_key: src?.s3_key || src?.key || src?.filename || null,
     bucket: src?.bucket || src?.s3_bucket || src?.Bucket || null,
     region: src?.region || src?.aws_region || src?.s3_region || null,
