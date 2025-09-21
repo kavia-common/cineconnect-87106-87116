@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import './index.css';
 import { ApiProvider } from './services/Api';
 import { SocketProvider } from './services/Socket';
+import { AuthProvider } from './services/Auth';
 import TopNav from './components/TopNav';
 import LeftSidebar from './components/LeftSidebar';
 import RightSidebar from './components/RightSidebar';
@@ -32,8 +33,9 @@ function App() {
   return (
     <BrowserRouter>
       <ApiProvider>
-        <SocketProvider>
-          <div className="app-shell">
+        <AuthProvider>
+          <SocketProvider>
+            <div className="app-shell">
             <TopNav onOpenChat={() => setOpenDrawer('chat')}
                     onOpenNotifications={() => setOpenDrawer('notif')}
                     onOpenQuick={() => setOpenDrawer('quick')} />
@@ -62,7 +64,8 @@ function App() {
             <NotificationsDrawer open={drawerApi.isOpen('notif')} onClose={drawerApi.close} />
             <QuickActionsDrawer open={drawerApi.isOpen('quick')} onClose={drawerApi.close} />
           </div>
-        </SocketProvider>
+          </SocketProvider>
+        </AuthProvider>
       </ApiProvider>
     </BrowserRouter>
   );

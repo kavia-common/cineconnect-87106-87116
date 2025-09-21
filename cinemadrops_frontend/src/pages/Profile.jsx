@@ -1,61 +1,79 @@
 import React, { useMemo, useState } from 'react';
 import dayjs from 'dayjs';
+import { useApi } from '../services/Api';
+import { useAuth } from '../services/Auth';
 
 /**
  * PUBLIC_INTERFACE
- * Profile muestra los videos subidos por el usuario actual (simulado) en modo oscuro,
- * con galería de tarjetas grandes y un reproductor destacado en modal al hacer clic.
- * Textos en español y estética "playful".
+ * Profile muestra los videos subidos por el usuario autenticado.
+ * Si no hay autenticación, muestra un mensaje e impide ver el perfil personal.
  */
 export default function Profile() {
-  // Simulación de usuario actual si no hay autenticación
-  const usuario = useMemo(
-    () => ({
-      id: 'me',
-      nombre: 'Tú',
-      bio: 'Creador/a apasionado/a por los cortos emotivos con toques experimentales.',
-      seguidores: 1240,
-      siguiendo: 312,
-      // Lista de videos (mock). Si tienes API real, reemplaza con fetch/swr.
-      videos: [
-        {
-          id: 'v1',
-          titulo: 'Luz de Invierno',
-          url: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
-          likes: 210,
-          duracion: 4,
-          creado: '2024-09-01T12:31:00Z',
-        },
-        {
-          id: 'v2',
-          titulo: 'Café a Medianoche',
-          url: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
-          likes: 152,
-          duracion: 6,
-          creado: '2024-08-11T08:22:00Z',
-        },
-        {
-          id: 'v3',
-          titulo: 'Sombras en el Parque',
-          url: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
-          likes: 397,
-          duracion: 9,
-          creado: '2024-07-20T17:45:00Z',
-        },
-        {
-          id: 'v4',
-          titulo: 'Tránsito',
-          url: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
-          likes: 89,
-          duracion: 3,
-          creado: '2024-07-10T10:10:00Z',
-        },
-      ],
-    }),
-    []
+  const { useFetch } = useApi();
+  const { user, isAuthenticated, authChecked } = useAuth();
+  const [destacado, setDestacado] = useState(null); // { id, titulo, url, ... } | null
+
+  // Construimos parámetros aunque aún no tengamos auth, para mantener orden de hooks.
+  const userId = user?.id;
+  const email = user?.email;
+  const query = userId
+    ? `?authorId=${encodeURIComponent(userId)}`
+    : (email ? `?email=${encodeURIComponent(email)}` : '');
+
+  // Llamamos al hook SIEMPRE. Si no hay autenticación lista, pasamos null como key (ApiProvider usa SWR y no hará fetch)
+  const { data: userVideos = [] } = useFetch(
+    authChecked && isAuthenticated ? `/videos${query}` : null,
+    { fallbackData: [] }
   );
 
-  const [destacado, setDestacado] = useState(null); // { id, titulo, url, ... } | null
+  // Normalización de datos a estructura usada por la UI
+  const usuario = useMemo(() => {
+    const nombre = (user?.name || user?.email || 'Tú');
+    const seguidores = 0;
+    const siguiendo = 0;
+
+    const videos = (userVideos || []).map((v, idx) => ({
+      id: v.id || v._id || `v-${idx}`,
+      titulo: v.title || v.name || v.filename || `Video ${idx + 1}`,
+      url: v.url || v.videoUrl || v.link || '',
+      likes: v.likes ?? v.stars ?? 0,
+      duracion: v.duration ?? v.length ?? 0,
+      creado: v.createdAt || v.date || v.uploadedAt || v.timestamp || null,
+    }));
+
+    return {
+      id: userId || 'unknown',
+      nombre,
+      bio: '',
+      seguidores,
+      siguiendo,
+      videos,
+    };
+  }, [user?.name, user?.email, userId, userVideos]);
+
+  // Estado de carga de autenticación
+  if (!authChecked) {
+    return (
+      <div className="card section">
+        <strong>Cargando perfil...</strong>
+      </div>
+    );
+  }
+
+  // Si no hay usuario autenticado, bloquear perfil personal real
+  if (!isAuthenticated) {
+    return (
+      <div className="card section">
+        <h2>Tu perfil</h2>
+        <p className="muted">
+          Aún no has iniciado sesión. Para ver y gestionar tus videos personales, inicia sesión o configura autenticación en el backend.
+        </p>
+        <div className="pill" style={{ marginTop: 8 }}>
+          Requisitos: endpoint GET /auth/me que devuelva tu identidad, y almacenamiento de videos con campo author/email/userId.
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="page-profile" style={{ color: '#e8f6f8' }}>
@@ -82,7 +100,7 @@ export default function Profile() {
           <div style={{ display: 'grid', gap: 6 }}>
             <h2 style={{ margin: 0, color: '#eafcff' }}>{usuario.nombre}</h2>
             <div className="muted" style={{ color: '#9fb4bd' }}>
-              {usuario.bio}
+              {usuario.bio || 'Tu espacio personal para gestionar tus cortos.'}
             </div>
             <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
               <span className="pill" style={pillDark}>
@@ -119,6 +137,12 @@ export default function Profile() {
         </div>
 
         <div style={{ height: 12 }} />
+
+        {(!usuario.videos || usuario.videos.length === 0) && (
+          <div className="muted" style={{ color: '#94a9b1' }}>
+            Aún no has subido videos o no se encontraron resultados para tu cuenta.
+          </div>
+        )}
 
         <div className="film-grid">
           {(usuario.videos || []).map((v) => (
@@ -158,7 +182,7 @@ export default function Profile() {
                   {v.titulo}
                 </div>
                 <div className="film-author" style={{ color: '#93a8b0' }}>
-                  {dayjs(v.creado).isValid()
+                  {v.creado && dayjs(v.creado).isValid()
                     ? dayjs(v.creado).format('YYYY-MM-DD HH:mm')
                     : '—'}
                 </div>
