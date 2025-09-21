@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import ChallengeParticipationModal from '../components/ChallengeParticipationModal.jsx';
 
 /**
  * PUBLIC_INTERFACE
@@ -9,6 +10,15 @@ export default function Challenges() {
     { id: 'w1', theme: 'Unexpected Kindness', deadline: 'Sun', count: 142 },
     { id: 'w0', theme: 'One Room Story', deadline: 'Ended', count: 289 },
   ];
+
+  const [open, setOpen] = useState(false);
+  const [active, setActive] = useState(null);
+
+  const onParticipate = (item) => {
+    setActive(item);
+    setOpen(true);
+  };
+
   return (
     <div className="page-challenges">
       <div className="card section">
@@ -23,11 +33,23 @@ export default function Challenges() {
             <div className="row">
               <span className="badge">Due: {i.deadline}</span>
               <span className="pill">{i.count} submissions</span>
-              <button className="btn">Participate</button>
+              <button
+                className="btn"
+                onClick={() => onParticipate(i)}
+                aria-label={`Participate in ${i.theme}`}
+              >
+                Participate
+              </button>
             </div>
           </div>
         ))}
       </div>
+
+      <ChallengeParticipationModal
+        open={open}
+        onClose={() => setOpen(false)}
+        challenge={active}
+      />
     </div>
   );
 }
