@@ -11,7 +11,10 @@ import Comments from '../components/Comments';
  *  2) Otherwise, try AWS Lambda API GET /videos_shortfilms/{filenameOrId}.
  *  3) Fallback to local backend GET /films/:id (used for tests/back-compat).
  *
- * It reads the route param as a generic "slug" which could be either a filename or an id.
+ * IMPORTANT (Playback):
+ * - For video playback we ALWAYS construct a direct S3 URL using the s3_key field returned by the API.
+ * - We do NOT use base64/file_content for the <video> player source.
+ * - If S3 load fails (404 or CORS), we show clear debug info and a warning.
  */
 export default function FilmDetails() {
   const { id: slug } = useParams();
@@ -37,7 +40,6 @@ export default function FilmDetails() {
 
   useEffect(() => {
     if (filmFromState) {
-      // We already have data; no need to fetch
       setAwsLoading(false);
       return;
     }
@@ -50,7 +52,6 @@ export default function FilmDetails() {
         const url = buildAwsUrl(slug);
         const res = await fetch(url, { headers: { Accept: 'application/json' } });
         if (!res.ok) {
-          // DEBUG: capture response text to expose in UI and console
           let responseText = '';
           try { responseText = await res.text(); } catch { /* ignore */ }
           const errObj = {
@@ -60,8 +61,6 @@ export default function FilmDetails() {
             url,
             responseText,
           };
-          // Console debug (raw)
-          // DEBUG: AWS film fetch error (details)
           // eslint-disable-next-line no-console
           console.error('[FilmDetails][AWS fetch error]', errObj);
           throw Object.assign(new Error(errObj.message), errObj);
@@ -79,7 +78,6 @@ export default function FilmDetails() {
       } catch (e) {
         if (!cancelled) {
           setAwsError(e);
-          // DEBUG: set structured error for UI panel
           setAwsErrorDebug({
             message: e?.message || 'Unknown error',
             status: e?.status ?? undefined,
@@ -102,27 +100,25 @@ export default function FilmDetails() {
   // PUBLIC_INTERFACE
   /**
    * mapVideoDetails normalizes the video metadata fields to the expected UI labels,
-   * aligning with the API field names requested in the task:
-   *  - videoTitle:   videoData.title || videoData.filename || 'Unknown Title'
-   *  - videoAuthor:  videoData.author || 'Unknown Author'
-   *  - videoGenre:   videoData.genre || 'Unknown Genre'
-   *  - videoDate:    videoData.upload_date (formatted with toLocaleDateString()) or '-'
-   *  - videoSize:    videoData.size_mb + ' MB' if present, otherwise '-'
-   *  - videoFilename: videoData.filename || '-'
+   * aligning with typical fields:
+   *  - videoTitle:   title || filename
+   *  - videoAuthor:  author
+   *  - videoGenre:   genre
+   *  - videoDate:    upload_date formatted or '-'
+   *  - videoSize:    size_mb -> "X MB" or '-'
+   *  - videoFilename: filename or '-'
+   *  - s3Key: s3_key (for constructing S3 URLs)
    */
   function mapVideoDetails(videoData) {
     const safe = videoData || {};
-    // Derive the best title:
     const videoTitle =
       safe.title ||
       (typeof safe.filename === 'string' ? safe.filename.replace(/\.[^/.]+$/, '') : safe.filename) ||
       'Unknown Title';
 
-    // Derive other fields with defaults:
     const videoAuthor = safe.author || 'Unknown Author';
     const videoGenre = safe.genre || 'Unknown Genre';
 
-    // Date: prefer upload_date from API; fallback to other common fields if present
     const rawDate =
       safe.upload_date ||
       safe.uploadDate ||
@@ -144,7 +140,6 @@ export default function FilmDetails() {
       videoDate = '-';
     }
 
-    // Size (MB): prefer size_mb; if numeric, append suffix, else '-'
     const sz = safe.size_mb;
     const videoSize =
       typeof sz === 'number' && isFinite(sz)
@@ -160,17 +155,18 @@ export default function FilmDetails() {
       videoDate,
       videoSize,
       videoFilename,
+      s3Key: safe.s3_key || safe.key || safe.s3Key || null,
     };
   }
 
-  // Compute normalized details for the currently selected film object so the UI can use stable names.
+  // Compute normalized details for the current film
   const details = useMemo(() => mapVideoDetails(film || {}), [film]);
 
-  // Loading/error states - show loading only if we don't have any film yet
-  const isLoading = !film && (awsLoading);
-  const isError = !film && (!!awsError);
+  // Loading/error states
+  const isLoading = !film && awsLoading;
+  const isError = !film && !!awsError;
 
-  // Ultra-compact player/card styling so the individual short looks small and light
+  // Styles
   const compactCard = {
     overflow: 'hidden',
     width: '100%',
@@ -196,30 +192,17 @@ export default function FilmDetails() {
     flexWrap: 'wrap',
   };
 
-  // Local-only reactions counters (no backend persistence yet)
-  // DEMO NOTE: Initialize with random values to simulate organic activity for presentation purposes.
-  // These are mock values only and are NOT persisted to any backend.
+  // Reactions (local)
   const randomBetween = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
-
   const [reactions, setReactions] = useState(() => ({
     dislike: randomBetween(1, 1000),
-    // Start "like" with either the film's existing likes (if provided) or a random demo value.
     like: film?.likes ? Math.max(0, Number(film.likes) || 0) : randomBetween(1, 1000),
     love: randomBetween(1, 1000),
     lifeChanging: randomBetween(1, 1000),
   }));
-  // Track which reaction is currently active for this user locally
-  const [activeReaction, setActiveReaction] = useState(null); // 'dislike' | 'like' | 'love' | 'lifeChanging' | null
+  const [activeReaction, setActiveReaction] = useState(null);
+  const toggleReaction = (key) => setActiveReaction((prev) => (prev === key ? null : key));
 
-  // Toggle logic ensuring only one active at a time.
-  // If clicking the same active reaction, it toggles off (deselect).
-  const toggleReaction = (key) => {
-    setActiveReaction((prev) => (prev === key ? null : key));
-    // Counters are left unchanged by default per task; if future features require counts,
-    // implement inc/dec around this state change.
-  };
-
-  // Small helper for accessible reaction buttons with single-select visual state
   const ReactionButton = ({ icon, label, count, onClick, ariaLabel, active }) => (
     <button
       type="button"
@@ -264,221 +247,122 @@ export default function FilmDetails() {
     </button>
   );
 
-  // --- Video playback state + logic ---
-  // Holds the resolved playable URL (signed URL) or a data URI when API returns base64/blob
+  // --- Robust S3-based video playback ---
+  // State for constructed S3 URL + debug
   const [videoSrc, setVideoSrc] = useState('');
   const [playLoading, setPlayLoading] = useState(false);
   const [playError, setPlayError] = useState('');
-
-  // DEBUG STATE for video fetch play error
-  const [playErrorDebug, setPlayErrorDebug] = useState(null); // { message, status, statusText, url, responseText? }
-
-  // DEBUG: Detailed response panel state for Play request (non-blocking UI)
-  // To remove later, search for "DEBUG PANEL (Play)" and delete this state + corresponding JSX
+  const [playErrorDebug, setPlayErrorDebug] = useState(null);
   const [playDebugInfo, setPlayDebugInfo] = useState(null);
 
   // PUBLIC_INTERFACE
   async function handlePlay() {
     /**
-     * Fetch the short film content or signed URL and attach it to the HTML5 video element.
-     * Route used: GET /videos_shortfilms/{filename}?include_content=true
-     * - If API returns JSON with { url } or similar, we use it directly.
-     * - If API returns base64 or blob-like content, we build a data: URI.
+     * Always use direct S3 URL built from s3_key.
+     * Steps:
+     *  1) Determine s3_key: prefer film.s3_key; else request AWS details and extract s3_key.
+     *  2) Build S3 URL using env var REACT_APP_S3_PUBLIC_BASE or fallback pattern.
+     *  3) Set <video src> to S3 URL. Do NOT use base64/file_content.
+     *  4) If the request or the <video> playback fails (404/CORS), expose debug info with constructed URL.
      *
-     * Connection explanation:
-     * - The Play button triggers this function.
-     * - We build the path using slug (usually filename from Discover).
-     * - We always pass include_content=true so backends can decide to embed content.
-     * - Loading and error states are reflected in UI elements under the player.
+     * Env:
+     *  - REACT_APP_S3_PUBLIC_BASE (Optional): e.g., https://your-bucket.s3.amazonaws.com
+     *    If missing, we attempt to infer from API fields (bucket or region) or use a generic
+     *    https://s3.amazonaws.com/<bucket>/<key> pattern when bucket is known.
      */
     setPlayLoading(true);
     setPlayError('');
     setPlayErrorDebug(null);
-    setVideoSrc('');
-    // DEBUG: reset debug info panel
     setPlayDebugInfo(null);
 
     try {
-      const base = (process.env.REACT_APP_API_BASE_URL || process.env.REACT_APP_API_BASE || 'https://s4myuxoa90.execute-api.us-east-2.amazonaws.com/devops').replace(/\/$/, '');
-      const endpoint = `${base}/videos_shortfilms/${encodeURIComponent(slug)}?include_content=true`;
-      const res = await fetch(endpoint, { method: 'GET' });
-
-      // Collect headers into plain object for visibility
-      const headersObj = {};
-      try {
-        res.headers?.forEach?.((v, k) => { headersObj[k] = v; });
-      } catch {
-        // ignore if headers can't be iterated
-      }
-
-      // Prepare a function to finalize the debug payload and log
-      const finalizeDebug = ({ rawBodyText, parsedBody, chosenSrc }) => {
-        const debugPayload = {
-          // Core HTTP
-          status: res.status,
-          statusText: res.statusText,
-          url: endpoint,
-          headers: headersObj,
-          // Raw body and parsed JSON (if any)
-          raw: rawBodyText,
-          json: parsedBody,
-          // The exact value used as <video src>
-          chosenSrc,
-        };
-        // DEBUG: full console dump (raw + headers + parsed)
-        // eslint-disable-next-line no-console
-        console.log('[FilmDetails][Play][Response Debug]', debugPayload);
-        setPlayDebugInfo(debugPayload);
-      };
-
-      if (!res.ok) {
-        // DEBUG: capture raw response for console + UI
-        let responseText = '';
-        try { responseText = await res.text(); } catch { /* ignore */ }
-        finalizeDebug({ rawBodyText: responseText, parsedBody: tryParseJson(responseText), chosenSrc: null });
-
-        const errObj = {
-          message: `HTTP ${res.status} ${res.statusText}`,
-          status: res.status,
-          statusText: res.statusText,
-          url: endpoint,
-          responseText,
-        };
-        // DEBUG: Video fetch error (raw)
-        // eslint-disable-next-line no-console
-        console.error('[FilmDetails][Video fetch error]', errObj);
-        throw Object.assign(new Error(errObj.message), errObj);
-      }
-
-      const contentType = res.headers.get('content-type') || '';
-
-      let chosenSrc = null;
-      let rawBodyTextForDebug = '';
-      let parsedBodyForDebug = undefined;
-
-      // Try JSON first (common for API Gateway)
-      if (contentType.includes('application/json')) {
-        // Read as text once so we can show raw, then parse
-        const text = await res.text();
-        rawBodyTextForDebug = text;
-        let body;
+      // 1) ensure we have AWS details to extract s3_key if not present locally
+      let candidate = film || {};
+      // If we came from tests/local fallback, film likely has no s3_key - attempt to fetch AWS details
+      if (!candidate.s3_key && !candidate.s3Key) {
         try {
-          body = JSON.parse(text);
-          parsedBodyForDebug = body;
-        } catch {
-          body = { raw: text };
-          parsedBodyForDebug = undefined;
-        }
-
-        // normalize common fields that might carry the playable url
-        const url =
-          body?.url ||
-          body?.link ||
-          body?.Location ||
-          body?.signedUrl ||
-          body?.videoUrl ||
-          body?.playbackUrl ||
-          body?.body?.url ||
-          body?.body?.signedUrl ||
-          null;
-
-        // If there's an embedded base64 content
-        const base64 =
-          body?.base64 ||
-          body?.file_content ||
-          body?.content ||
-          body?.body?.base64 ||
-          null;
-
-        const contentTypeFromBody =
-          body?.content_type ||
-          body?.mime ||
-          body?.mimeType ||
-          'video/mp4';
-
-        if (url) {
-          chosenSrc = url;
-          setVideoSrc(url);
-        } else if (base64) {
-          // Ensure we prepend data URI header
-          const dataUri = base64.startsWith('data:')
-            ? base64
-            : `data:${contentTypeFromBody};base64,${base64}`;
-          chosenSrc = dataUri;
-          setVideoSrc(dataUri);
-        } else {
-          // Fallback: if body is actually a string url
-          if (typeof body === 'string' && /^https?:\/\//.test(body)) {
-            chosenSrc = body;
-            setVideoSrc(body);
+          const url = buildAwsUrl(slug);
+          const res = await fetch(url, { headers: { Accept: 'application/json' } });
+          const ct = res.headers.get('content-type') || '';
+          let body;
+          if (ct.includes('application/json')) {
+            body = await res.json();
           } else {
-            finalizeDebug({ rawBodyText: rawBodyTextForDebug, parsedBody: parsedBodyForDebug, chosenSrc });
-            throw new Error('API did not return a playable URL or base64 content.');
+            const text = await res.text();
+            try { body = JSON.parse(text); } catch { body = { raw: text }; }
           }
+          const normalized = normalizeAwsFilmFull(body);
+          candidate = { ...normalized, ...candidate };
+        } catch (e) {
+          // Non-fatal; we still show debug below
         }
+      }
 
-        // Store debug info after choosing src
-        finalizeDebug({ rawBodyText: rawBodyTextForDebug, parsedBody: parsedBodyForDebug, chosenSrc });
+      // Extract possible fields
+      const s3Key = candidate.s3_key || candidate.s3Key || candidate.key || candidate.filename || null;
+      const s3Bucket =
+        candidate.bucket ||
+        candidate.s3_bucket ||
+        candidate.Bucket ||
+        candidate.bucketName ||
+        null;
+      const region =
+        candidate.region ||
+        candidate.aws_region ||
+        candidate.s3_region ||
+        process.env.REACT_APP_AWS_REGION ||
+        null;
+
+      if (!s3Key) {
+        throw new Error('Missing s3_key for this short film. Cannot construct S3 URL.');
+      }
+
+      // 2) Build S3 base
+      const ENV_S3_BASE = (process.env.REACT_APP_S3_PUBLIC_BASE || '').replace(/\/$/, '');
+      let s3Url = '';
+      if (ENV_S3_BASE) {
+        // Case: explicit S3 public base provided
+        s3Url = `${ENV_S3_BASE}/${encodeURIComponent(s3Key)}`;
+      } else if (s3Bucket && region) {
+        // Virtual-hosted–style URL with region
+        s3Url = `https://${s3Bucket}.s3.${region}.amazonaws.com/${encodeURIComponent(s3Key)}`;
+      } else if (s3Bucket) {
+        // Generic global endpoint
+        s3Url = `https://s3.amazonaws.com/${s3Bucket}/${encodeURIComponent(s3Key)}`;
       } else {
-        // If API returns raw text, try to parse or treat as URL
-        const text = await res.text();
-        rawBodyTextForDebug = text;
-
-        try {
-          const body = JSON.parse(text);
-          parsedBodyForDebug = body;
-
-          const url = body?.url || body?.signedUrl || body?.videoUrl || null;
-          const base64 = body?.base64 || body?.content || null;
-          const contentTypeFromBody = body?.content_type || 'video/mp4';
-          if (url) {
-            chosenSrc = url;
-            setVideoSrc(url);
-          } else if (base64) {
-            const dataUri = base64.startsWith('data:')
-              ? base64
-              : `data:${contentTypeFromBody};base64,${base64}`;
-            chosenSrc = dataUri;
-            setVideoSrc(dataUri);
-          } else if (typeof body === 'string' && /^https?:\/\//.test(body)) {
-            chosenSrc = body;
-            setVideoSrc(body);
-          } else {
-            // Sometimes API can return a plain signed URL string (not JSON)
-            if (/^https?:\/\//.test(text.trim())) {
-              chosenSrc = text.trim();
-              setVideoSrc(chosenSrc);
-            } else {
-              finalizeDebug({ rawBodyText: rawBodyTextForDebug, parsedBody: parsedBodyForDebug, chosenSrc });
-              throw new Error('Unrecognized response format for video content.');
-            }
-          }
-        } catch {
-          // Raw text not JSON. If looks like URL or data:, use it
-          if (/^https?:\/\//.test(text.trim())) {
-            chosenSrc = text.trim();
-            setVideoSrc(chosenSrc);
-          } else if (text.startsWith('data:')) {
-            chosenSrc = text.trim();
-            setVideoSrc(chosenSrc);
-          } else {
-            finalizeDebug({ rawBodyText: rawBodyTextForDebug, parsedBody: parsedBodyForDebug, chosenSrc });
-            throw new Error('Unrecognized non-JSON response for video content.');
-          }
+        // As a last resort, if API exposes a direct URL field, allow it (still S3-based)
+        const direct = candidate.url || candidate.link || candidate.Location || candidate.videoUrl || null;
+        if (direct && /^https?:\/\//.test(direct)) {
+          s3Url = direct;
+        } else {
+          throw new Error('Could not determine S3 bucket URL. Provide REACT_APP_S3_PUBLIC_BASE or ensure API returns bucket/region.');
         }
-
-        // Store debug info for non-JSON path
-        finalizeDebug({ rawBodyText: rawBodyTextForDebug, parsedBody: parsedBodyForDebug, chosenSrc });
       }
+
+      // 3) Set the video player to use S3 URL
+      setVideoSrc(s3Url);
+
+      // 4) Prepare debug info block with constructed S3 URL
+      setPlayDebugInfo({
+        status: 'constructed',
+        statusText: 'Using S3 URL',
+        url: s3Url,
+        headers: {},
+        raw: '',
+        json: {
+          note: 'Player is using direct S3 URL built from s3_key',
+          s3_key: s3Key,
+          bucket: s3Bucket,
+          region,
+          envBase: process.env.REACT_APP_S3_PUBLIC_BASE || null,
+        },
+        chosenSrc: s3Url,
+      });
     } catch (err) {
-      setPlayError(err?.message || 'Could not load the video.');
-      // DEBUG: store full error for UI panel
+      setPlayError(err?.message || 'Could not build the S3 video URL.');
       setPlayErrorDebug({
         message: err?.message || 'Unknown error',
-        status: err?.status ?? undefined,
-        statusText: err?.statusText ?? undefined,
-        url: err?.url ?? undefined,
-        responseText: err?.responseText ?? undefined,
+        url: (typeof err?.url === 'string' ? err.url : undefined),
       });
     } finally {
       setPlayLoading(false);
@@ -502,7 +386,6 @@ export default function FilmDetails() {
     return (
       <div className="card section" role="alert">
         Could not load the film details.
-        {/* DEBUG PANEL: AWS details fetch error */}
         {awsErrorDebug && (
           <div
             className="pill"
@@ -534,7 +417,6 @@ export default function FilmDetails() {
     );
   }
 
-  // Safety fallback (shouldn't happen usually due to fallback(local) in tests)
   if (!film) {
     return (
       <div className="card section">
@@ -675,7 +557,7 @@ export default function FilmDetails() {
           {/* Inline player status after clicking Play */}
           <div style={{ height: 10 }} />
           <div className="row" style={{ gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-            {playLoading && <span className="muted" role="status">Fetching video...</span>}
+            {playLoading && <span className="muted" role="status">Loading video from S3...</span>}
             {playError && (
               <span className="pill" role="alert" style={{ borderColor: 'var(--cd-error)', color: 'var(--cd-text)' }}>
                 Error: {playError}
@@ -683,7 +565,7 @@ export default function FilmDetails() {
             )}
           </div>
 
-          {/* DEBUG PANEL: Video fetch error info (non-intrusive) */}
+          {/* DEBUG PANEL: Video fetch/URL construction info */}
           {playErrorDebug && (
             <div
               className="pill"
@@ -698,7 +580,7 @@ export default function FilmDetails() {
               }}
               role="status"
             >
-              <strong style={{ display: 'block', marginBottom: 6 }}>Debug Info (Video Fetch)</strong>
+              <strong style={{ display: 'block', marginBottom: 6 }}>Debug Info (Video Load)</strong>
               <div><strong>Message:</strong> {String(playErrorDebug.message || '')}</div>
               {playErrorDebug.status !== undefined && (
                 <div><strong>Status:</strong> {String(playErrorDebug.status)} {playErrorDebug.statusText ? `- ${playErrorDebug.statusText}` : ''}</div>
@@ -710,10 +592,16 @@ export default function FilmDetails() {
                   <pre style={{ overflowX: 'auto' }}>{playErrorDebug.responseText}</pre>
                 </details>
               )}
+              <div style={{ marginTop: 8 }} className="muted">
+                If the video fails to play, verify:
+                <ul style={{ marginTop: 6 }}>
+                  <li>S3 object exists at the constructed path (404 indicates missing key).</li>
+                  <li>CORS configuration on the S3 bucket allows GET from this origin.</li>
+                </ul>
+              </div>
             </div>
           )}
 
-          {/* DEBUG PANEL (Play): Visible response object - remove this block when debugging is done */}
           {playDebugInfo && (
             <div
               className="card section"
@@ -725,44 +613,28 @@ export default function FilmDetails() {
               }}
               role="status"
             >
-              <strong>Debug: Play API Response</strong>
+              <strong>Debug: Video Source</strong>
               <div style={{ height: 6 }} />
               <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
-                <span className="pill">HTTP: {String(playDebugInfo.status)} {playDebugInfo.statusText || ''}</span>
+                <span className="pill">{String(playDebugInfo.status)}</span>
                 <span className="pill">URL</span>
                 <code style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>{playDebugInfo.url}</code>
               </div>
               <div style={{ height: 8 }} />
               <details>
-                <summary>Headers</summary>
-                <pre style={{ overflowX: 'auto' }}>{JSON.stringify(playDebugInfo.headers || {}, null, 2)}</pre>
-              </details>
-              <details>
-                <summary>JSON (parsed if possible)</summary>
-                <pre style={{ overflowX: 'auto' }}>
-                  {(() => {
-                    try {
-                      return JSON.stringify(playDebugInfo.json, null, 2);
-                    } catch {
-                      return 'Could not stringify JSON body.';
-                    }
-                  })()}
-                </pre>
-              </details>
-              <details open>
-                <summary>Raw Body</summary>
-                <pre style={{ overflowX: 'auto', maxHeight: 260 }}>{String(playDebugInfo.raw || '')}</pre>
+                <summary>JSON</summary>
+                <pre style={{ overflowX: 'auto' }}>{JSON.stringify(playDebugInfo.json || {}, null, 2)}</pre>
               </details>
               <div style={{ height: 8 }} />
               <div>
                 <strong>Chosen video src:</strong>
                 <div className="pill" style={{ display: 'inline-flex', marginTop: 6 }}>
-                  {playDebugInfo.chosenSrc
-                    ? (playDebugInfo.chosenSrc.startsWith('data:')
-                        ? 'data:(base64 payload hidden)'
-                        : playDebugInfo.chosenSrc)
-                    : '—'}
+                  {playDebugInfo.chosenSrc || '—'}
                 </div>
+              </div>
+              <div style={{ height: 8 }} />
+              <div className="muted" style={{ fontSize: 12 }}>
+                Note: If this S3 URL returns 404 or is blocked by CORS, the player will not load. Check S3 ACL/CORS.
               </div>
             </div>
           )}
@@ -776,10 +648,22 @@ export default function FilmDetails() {
                   controls
                   style={{ width: '100%', height: 'auto', display: 'block' }}
                   src={videoSrc}
+                  onError={(e) => {
+                    // Surface a succinct warning with the exact source that failed
+                    const media = e?.currentTarget;
+                    const src = media?.currentSrc || videoSrc;
+                    setPlayError('Video failed to load. Possible 404 or CORS issue with the S3 URL.');
+                    setPlayErrorDebug((prev) => ({
+                      ...(prev || {}),
+                      message: 'HTML5 video error on S3 URL',
+                      url: src,
+                      statusText: 'Playback error (network/CORS/404)',
+                    }));
+                  }}
                 />
               </div>
               <div className="muted" style={{ fontSize: 12, marginTop: 6 }}>
-                Source: {videoSrc.startsWith('data:') ? 'Embedded (base64)' : 'URL'}
+                Source: S3 URL
               </div>
             </>
           ) : null}
@@ -837,19 +721,40 @@ export default function FilmDetails() {
 }
 
 /**
- * Normalize AWS film shape to local film object.
+ * Normalize AWS film shape into a richer object that may include fields needed to build S3 URL.
+ */
+function normalizeAwsFilmFull(body) {
+  const root = body?.video || body?.item || body?.data || body?.body || body || {};
+  const filename = root.filename || root.name || root.key || null;
+  return {
+    id: root.id || root._id || root.key || filename || null,
+    title: root.title || root.name || root.nombre || (filename ? filename.replace(/\.[^/.]+$/, '') : 'Unknown Title'),
+    author: root.author || root.creator || root.autor || 'Unknown',
+    duration: root.duration ?? root.length ?? 0,
+    likes: root.likes ?? root.stars ?? 0,
+    description: root.description || root.descripcion || 'A short film shared on Cinemadrops.',
+    scriptSnippet: root.scriptSnippet || root.notes || 'Scene opens with a quiet street. Footsteps echo...',
+    crew: Array.isArray(root.crew) ? root.crew : ['Director: Unknown', 'DOP: Unknown', 'Editor: Unknown'],
+    more: Array.isArray(root.more) ? root.more : [],
+    // Fields relevant for playback
+    filename,
+    s3_key: root.s3_key || root.key || filename || null,
+    bucket: root.bucket || root.s3_bucket || root.Bucket || null,
+    region: root.region || root.aws_region || root.s3_region || null,
+  };
+}
+
+/**
+ * Normalize AWS film shape to local film object (basic metadata).
  */
 function normalizeAwsFilm(body, slug) {
-  // Accept several shapes; if body contains a 'video' or 'item' field, unwrap it
   const src = body?.video || body?.item || body?.data || body;
-
   const title =
     src?.title ||
     src?.name ||
     src?.nombre ||
     src?.filename?.replace(/\.[^/.]+$/, '') ||
     String(slug);
-
   const author = src?.author || src?.creator || src?.autor || 'Unknown';
   const likes = src?.likes ?? src?.stars ?? 0;
   const duration = src?.duration ?? src?.length ?? 0;
@@ -872,6 +777,11 @@ function normalizeAwsFilm(body, slug) {
       ? src.crew
       : ['Director: Unknown', 'DOP: Unknown', 'Editor: Unknown'],
     more: Array.isArray(src?.more) ? src.more : [],
+    // carry-through potential playback fields if present
+    s3_key: src?.s3_key || src?.key || src?.filename || null,
+    bucket: src?.bucket || src?.s3_bucket || src?.Bucket || null,
+    region: src?.region || src?.aws_region || src?.s3_region || null,
+    filename: src?.filename || null,
   };
 }
 
