@@ -9,16 +9,20 @@ import { Link } from 'react-router-dom';
 export default function FilmCard({ film, index = 0, image }) {
   // The image must be a real import (e.g., from src/assets) or an absolute public path (/assets/*).
   // We do not compute or fetch images here; no fallback logic that could block rendering.
+  const [imgOk, setImgOk] = React.useState(true);
+
+  const showImage = Boolean(image) && imgOk;
 
   return (
     <Link to={`/film/${film.id}`} className="card film-card" aria-label={`${film.title} by ${film.author}`}>
       <div className="film-thumb" style={{ position: 'relative', overflow: 'hidden' }}>
-        {image ? (
+        {showImage ? (
           <img
             src={image}
             alt={`${film.title} cover`}
             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             loading="lazy"
+            onError={() => setImgOk(false)}
           />
         ) : (
           <div
@@ -29,6 +33,11 @@ export default function FilmCard({ film, index = 0, image }) {
               background: 'var(--cd-gradient)',
             }}
           />
+        )}
+        {!showImage && (
+          <span className="visually-hidden" aria-live="polite">
+            Cover image unavailable; showing placeholder.
+          </span>
         )}
         <div className="badge">★ {film.likes} • ⏱ {film.duration}m</div>
       </div>
