@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { getAssetUrl } from '../utils/assets';
 
 /**
  * PUBLIC_INTERFACE
@@ -14,7 +15,8 @@ export default function FilmCard({
   previewImage,
 }) {
   // Prefer previewImage when provided, otherwise use placeholderImage.
-  const src = previewImage || placeholderImage;
+  const rawSrc = previewImage || placeholderImage;
+  const src = getAssetUrl(rawSrc);
 
   return (
     <Link to={`/film/${film.id}`} className="card film-card" style={{ textDecoration: 'none' }}>
@@ -27,6 +29,12 @@ export default function FilmCard({
           src={src}
           alt={`Preview de ${film.title}`}
           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          onError={(e) => {
+            // Fallback to placeholder if preview fails
+            if (rawSrc !== placeholderImage) {
+              e.currentTarget.src = getAssetUrl(placeholderImage);
+            }
+          }}
         />
         <div className="badge">★ {film.likes} • ⏱ {film.duration}m</div>
       </div>

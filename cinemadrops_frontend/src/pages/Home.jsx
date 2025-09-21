@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { useApi } from '../services/Api';
 import FilmCard from '../components/FilmCard';
+import { getAssetUrl } from '../utils/assets';
 
 /**
  * PUBLIC_INTERFACE
@@ -45,14 +46,14 @@ export default function Home() {
 
   // Build a gallery of asset images to rotate through for visual variety.
   const assetGallery = [
-    '/assets/pexels-amar-29656074.jpg',
-    '/assets/pexels-jillyjillystudio-33962662.jpg',
-    '/assets/pexels-delot-29721171.jpg',
-    '/assets/pexels-andreas-schnabl-1775843-19321355.jpg',
-    '/assets/pexels-chriszwettler-9407824.jpg',
-    '/assets/pexels-alvarobalderas-20747775.jpg',
-    '/assets/pexels-kalistro666-29263909.jpg',
-    '/assets/pexels-guillermo-berlin-1524368912-30068229.jpg',
+    getAssetUrl('/assets/pexels-amar-29656074.jpg'),
+    getAssetUrl('/assets/pexels-jillyjillystudio-33962662.jpg'),
+    getAssetUrl('/assets/pexels-delot-29721171.jpg'),
+    getAssetUrl('/assets/pexels-andreas-schnabl-1775843-19321355.jpg'),
+    getAssetUrl('/assets/pexels-chriszwettler-9407824.jpg'),
+    getAssetUrl('/assets/pexels-alvarobalderas-20747775.jpg'),
+    getAssetUrl('/assets/pexels-kalistro666-29263909.jpg'),
+    getAssetUrl('/assets/pexels-guillermo-berlin-1524368912-30068229.jpg'),
   ];
 
   // Default placeholder if no assets resolve for any reason.
@@ -71,7 +72,7 @@ export default function Home() {
       film.poster ||
       null;
 
-    if (filmImage) return filmImage;
+    if (filmImage) return getAssetUrl(filmImage);
 
     if (assetGallery.length === 0) return defaultPlaceholder;
     return assetGallery[index % assetGallery.length];
@@ -154,7 +155,7 @@ const demoFilms = [
     author: 'Liu Chen',
     likes: 312,
     duration: 7,
-    thumbnail: '/assets/pexels-jillyjillystudio-33962662.jpg'
+    thumbnail: getAssetUrl('/assets/pexels-jillyjillystudio-33962662.jpg')
   },
   {
     id: '2',
@@ -162,7 +163,7 @@ const demoFilms = [
     author: 'Samir Khan',
     likes: 922,
     duration: 12,
-    cover: '/assets/pexels-delot-29721171.jpg'
+    cover: getAssetUrl('/assets/pexels-delot-29721171.jpg')
   },
   {
     id: '3',
@@ -170,7 +171,7 @@ const demoFilms = [
     author: 'Ivy Gomez',
     likes: 154,
     duration: 5,
-    coverUrl: '/assets/pexels-andreas-schnabl-1775843-19321355.jpg'
+    coverUrl: getAssetUrl('/assets/pexels-andreas-schnabl-1775843-19321355.jpg')
   },
   {
     id: '4',
@@ -178,7 +179,7 @@ const demoFilms = [
     author: 'Mika Ito',
     likes: 708,
     duration: 9,
-    poster: '/assets/pexels-chriszwettler-9407824.jpg'
+    poster: getAssetUrl('/assets/pexels-chriszwettler-9407824.jpg')
   },
   {
     id: '5',
@@ -186,7 +187,7 @@ const demoFilms = [
     author: 'Jon Ruiz',
     likes: 421,
     duration: 15,
-    thumbnailUrl: '/assets/pexels-alvarobalderas-20747775.jpg'
+    thumbnailUrl: getAssetUrl('/assets/pexels-alvarobalderas-20747775.jpg')
   },
   {
     id: '6',
@@ -202,7 +203,7 @@ const demoFilms = [
     author: 'Sara Ali',
     likes: 581,
     duration: 6,
-    cover_image: '/assets/pexels-kalistro666-29263909.jpg'
+    cover_image: getAssetUrl('/assets/pexels-kalistro666-29263909.jpg')
   },
   {
     id: '8',
@@ -210,6 +211,6 @@ const demoFilms = [
     author: 'Ana Costa',
     likes: 835,
     duration: 14,
-    thumbnail: '/assets/pexels-guillermo-berlin-1524368912-30068229.jpg'
+    thumbnail: getAssetUrl('/assets/pexels-guillermo-berlin-1524368912-30068229.jpg')
   },
 ];
