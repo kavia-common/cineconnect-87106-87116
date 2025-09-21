@@ -2,7 +2,7 @@ import React, { useId, useState } from 'react';
 
 /**
  * PUBLIC_INTERFACE
- * LeftSidebar shows playful filter controls and discovery tags.
+ * LeftSidebar shows playful filter controls.
  * Now includes an accessible collapsible panel for Filters.
  */
 export default function LeftSidebar() {
@@ -77,18 +77,7 @@ export default function LeftSidebar() {
           <div style={{ height: 4 }} />
         </div>
       </div>
-
-      <div className="card section">
-        <strong>Discover</strong>
-        <div style={{ height: 10 }} />
-        <div className="row" style={{ flexWrap: 'wrap' }}>
-          {['#behindthescenes', '#script', '#newvoices', '#award', '#festival'].map((h) => (
-            <span key={h} className="pill" style={{ margin: 4 }}>
-              {h}
-            </span>
-          ))}
-        </div>
-      </div>
+      {/* Removed Discover hashtags section to declutter the UI */}
     </>
   );
 }

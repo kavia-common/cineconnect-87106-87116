@@ -5,7 +5,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { ApiProvider } from '../../services/Api';
 import Home from '../../pages/Home';
 
-test('Home renders Discover and film grid with fallback data', () => {
+test('Home renders film grid with fallback data', () => {
   render(
     <MemoryRouter>
       <ApiProvider>
@@ -14,8 +14,7 @@ test('Home renders Discover and film grid with fallback data', () => {
     </MemoryRouter>
   );
 
-  expect(screen.getByText(/Discover/i)).toBeInTheDocument();
-  // Some film titles from fallback
+  // Verify film titles from fallback appear (header removed)
   expect(screen.getByText(/Paper Boats/i)).toBeInTheDocument();
   expect(screen.getByText(/Under Neon/i)).toBeInTheDocument();
 });

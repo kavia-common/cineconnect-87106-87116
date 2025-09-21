@@ -12,17 +12,8 @@ export default function Home() {
 
   return (
     <div className="page-home">
-      <div className="row" style={{ marginBottom: 12 }}>
-        <h2 style={{ margin: 0 }}>Discover</h2>
-        <div className="space" />
-        <span className="pill">For you</span>
-        <span className="pill">New</span>
-        <span className="pill">Rising</span>
-        <span className="pill">Awarded</span>
-      </div>
-
-      {/* Section wrapper to give the entire grid block uniform breathing room */}
-      <div className="discover-section card section">
+      {/* Content-first layout without discover header/pills */}
+      <div className="discover-section card section" style={{ marginTop: 0 }}>
         <div className="film-grid">
           {films.map(f => <FilmCard key={f.id} film={f} />)}
         </div>

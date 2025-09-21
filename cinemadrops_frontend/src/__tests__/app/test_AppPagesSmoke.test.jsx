@@ -19,7 +19,8 @@ test('route: / renders Home', () => {
       </ApiProvider>
     </MemoryRouter>
   );
-  expect(screen.getByText(/Discover/i)).toBeInTheDocument();
+  // Verify presence of film grid content instead of a removed header
+  expect(screen.getByText(/Paper Boats/i)).toBeInTheDocument();
 });
 
 test('route: /curated renders Curated', () => {
