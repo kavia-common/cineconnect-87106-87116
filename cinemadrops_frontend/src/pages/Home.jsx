@@ -131,7 +131,7 @@ export default function Home() {
       </div>
 
       {/* Main film grid only */}
-      <section aria-label="Film results">
+      <section aria-label="Film results" className="film-grid-section">
         <div className="film-grid">
           {films.map((f, i) => (
             <FilmCard

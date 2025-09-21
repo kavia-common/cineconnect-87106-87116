@@ -47,6 +47,9 @@ img { max-width: 100%; display: block; }
   max-width: 1320px; /* give a bit more room for bigger cards */
   margin: 0 auto;
   padding: 0 16px;
+  /* Respect safe areas on mobile browsers */
+  padding-left: max(16px, env(safe-area-inset-left));
+  padding-right: max(16px, env(safe-area-inset-right));
 }
 
 /* Playful buttons */
@@ -94,10 +97,16 @@ html[data-theme="dark"] .btn.secondary { box-shadow: 0 8px 24px rgba(255,182,39,
   display: grid;
   grid-template-columns: 1fr; /* single main column by default for maximum space */
   gap: 16px;
-  padding: 16px;
+  padding: 20px 0; /* let container provide horizontal padding */
 }
 @media (max-width: 1100px) {
   .main-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 620px) {
+  .main-grid {
+    padding-top: 14px;
+    padding-bottom: 14px;
+  }
 }
 
 /* Top nav */
@@ -135,6 +144,40 @@ html[data-theme="dark"] .btn.secondary { box-shadow: 0 8px 24px rgba(255,182,39,
 /* Sidebar sections (left sidebar removed on Discover). Keeping generic class in case other pages reuse it */
 .sidebar { display: flex; flex-direction: column; gap: 16px; }
 .sidebar .section { padding: 12px; }
+
+/* Film grid wrapper adds consistent outer spacing around the group of cards */
+.film-grid-section {
+  /* subtle separation from edges; playful but soft */
+  margin: 16px 0 24px 0;
+  padding: 16px 18px;
+  border-radius: calc(var(--cd-radius) + 2px);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--cd-surface) 94%, transparent) 0%, transparent 100%);
+  border: 1px solid var(--cd-border);
+  /* shadow only in light to keep it airy; dark relies on border/contrast */
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.05);
+}
+html[data-theme="dark"] .film-grid-section {
+  background: color-mix(in srgb, var(--cd-surface) 96%, transparent);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.14);
+}
+
+/* Ensure section padding breathes nicely on small screens */
+@media (max-width: 980px) {
+  .film-grid-section {
+    margin: 12px 0 20px 0;
+    padding: 14px;
+  }
+}
+@media (max-width: 620px) {
+  .film-grid-section {
+    margin: 10px 0 16px 0;
+    padding: 12px;
+    /* respect safe areas */
+    padding-left: max(12px, env(safe-area-inset-left));
+    padding-right: max(12px, env(safe-area-inset-right));
+  }
+}
 
 /* Film grid */
 /* Make thumbnails even larger, with responsive 2-column max layout on main content.
