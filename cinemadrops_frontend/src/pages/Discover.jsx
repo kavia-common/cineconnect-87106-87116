@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useApi } from '../services/Api';
 import FilmCard from '../components/FilmCard';
 import { getAssetUrl } from '../utils/assets';
@@ -27,18 +27,54 @@ import { getAssetUrl } from '../utils/assets';
  *   }
  */
 export default function Discover() {
-  const { useFetch } = useApi();
+  // Direct state management instead of useApi hook
+  const [data, setData] = useState(null);
+  const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Hardcoded API configuration
   const API_BASE_URL = 'https://s4myuxoa90.execute-api.us-east-2.amazonaws.com/devops';
   const API_VIDEOS_PATH = '/videos_shortfilms';
+  const FULL_API_URL = API_BASE_URL + API_VIDEOS_PATH;
 
-  // We rely on ApiProvider: it prefixes base URL and includes credentials.
-  // Hardcoded approach - bypassing environment variables
-  const { data, error, isLoading } = useFetch(`${API_BASE_URL}${API_VIDEOS_PATH}`, {
-    fallbackData: [],
-    revalidateOnFocus: true,
-  });
+  // Direct fetch function
+  const fetchVideos = async () => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      console.log('Fetching from:', FULL_API_URL);
+      
+      const response = await fetch(FULL_API_URL, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
+      });
+      
+      console.log('Response status:', response.status);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const responseData = await response.json();
+      console.log('Response data:', responseData);
+      
+      setData(responseData);
+    } catch (err) {
+      console.error('Fetch error:', err);
+      setError(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Fetch on component mount
+  useEffect(() => {
+    fetchVideos();
+  }, []);
 
   // Normalize backend items to the film structure used by FilmCard/Home.
   // Updated for English Lambda response format
@@ -225,23 +261,23 @@ export default function Discover() {
               <div><strong>Debug Information:</strong></div>
               <div>API Path: {API_VIDEOS_PATH}</div>
               <div>Base URL: {API_BASE_URL}</div>
-              <div>Full URL: {API_BASE_URL + API_VIDEOS_PATH}</div>
+              <div>Full URL: {FULL_API_URL}</div>
               <div>Error Type: {error?.name || 'Unknown'}</div>
               <div>Network Error: {error?.message?.includes('fetch') ? 'Yes (CORS/Network issue)' : 'No'}</div>
             </div>
             <div style={{ fontSize: '12px', color: '#666', marginTop: '8px' }}>
               <strong>Common solutions:</strong>
               <br />
-              1. Check if REACT_APP_API_BASE_URL is set in your .env file
+              1. Check if API Gateway URL is correct and accessible
               <br />
-              2. Verify API Gateway URL is correct and accessible
+              2. Ensure CORS is enabled in API Gateway
               <br />
-              3. Ensure CORS is enabled in API Gateway
+              3. Check browser console for network errors
               <br />
-              4. Check browser console for network errors
+              4. Verify Lambda function is deployed and working
             </div>
             <button 
-              onClick={() => window.location.reload()}
+              onClick={fetchVideos}
               style={{
                 marginTop: '12px',
                 padding: '8px 16px',
