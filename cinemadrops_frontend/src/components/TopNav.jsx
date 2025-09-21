@@ -21,7 +21,7 @@ export default function TopNav() {
           <input className="input" placeholder="Buscar películas, creadores, hashtags..." aria-label="Buscar" />
         </div>
         <nav className="row">
-          <NavLink to="/curated" className="pill">Curated</NavLink>
+
           <NavLink to="/challenges" className="pill">Challenges</NavLink>
           <NavLink to="/forums" className="pill">Forums</NavLink>
           <NavLink to="/upload" className="pill" aria-label="Upload Video">Upload Video</NavLink>

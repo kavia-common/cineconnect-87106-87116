@@ -11,7 +11,7 @@ describe('TopNav', () => {
       </MemoryRouter>
     );
     expect(screen.getByText(/Cinemadrops/i)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /Curated/i })).toBeInTheDocument();
+
     expect(screen.getByRole('link', { name: /Challenges/i })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Forums/i })).toBeInTheDocument();
     // Input de búsqueda

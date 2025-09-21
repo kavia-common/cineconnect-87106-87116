@@ -9,9 +9,6 @@ test('renders home with brand', () => {
 
 test('navigates to known routes via links', () => {
   render(<App />);
-  const linkCurated = screen.getByRole('link', { name: /Curated/i });
-  linkCurated.click();
-  expect(screen.getByText(/Curated/i)).toBeInTheDocument();
 
   const linkChallenges = screen.getByRole('link', { name: /Challenges/i });
   linkChallenges.click();
