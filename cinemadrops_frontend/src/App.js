@@ -4,8 +4,6 @@ import './index.css';
 import { ApiProvider } from './services/Api';
 import { SocketProvider } from './services/Socket';
 import TopNav from './components/TopNav';
-import LeftSidebar from './components/LeftSidebar';
-import RightSidebar from './components/RightSidebar';
 import Home from './pages/Home';
 import FilmDetails from './pages/FilmDetails';
 import CreatorProfile from './pages/CreatorProfile';
@@ -27,9 +25,6 @@ function App() {
           <div className="app-shell">
             <TopNav />
             <div className="main-grid container">
-              <aside className="sidebar">
-                <LeftSidebar />
-              </aside>
               <main>
                 <Routes>
                   <Route path="/" element={<Home />} />
@@ -44,9 +39,6 @@ function App() {
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </main>
-              <aside className="rightbar">
-                <RightSidebar />
-              </aside>
             </div>
           </div>
         </SocketProvider>

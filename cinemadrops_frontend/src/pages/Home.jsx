@@ -16,14 +16,7 @@ export default function Home() {
   const [discoverOption, setDiscoverOption] = React.useState('For you');
   const discoverRef = React.useRef(null);
 
-  // Filters dropdown
-  const [filtersOpen, setFiltersOpen] = React.useState(false);
-  const filtersRef = React.useRef(null);
-  const [selectedTags, setSelectedTags] = React.useState([]);
-  const [duration, setDuration] = React.useState('any');
-
   const discoverOptions = ['For you', 'New', 'Rising', 'Awarded', 'Trending'];
-  const tags = ['Drama', 'Comedy', 'Sci-Fi', 'Documentary', 'Animation', 'Horror', 'Experimental'];
 
   // Close on outside click/escape
   React.useEffect(() => {
@@ -31,14 +24,10 @@ export default function Home() {
       if (discoverOpen && discoverRef.current && !discoverRef.current.contains(e.target)) {
         setDiscoverOpen(false);
       }
-      if (filtersOpen && filtersRef.current && !filtersRef.current.contains(e.target)) {
-        setFiltersOpen(false);
-      }
     };
     const onEsc = (e) => {
       if (e.key === 'Escape') {
         setDiscoverOpen(false);
-        setFiltersOpen(false);
       }
     };
     document.addEventListener('mousedown', onDocClick);
@@ -47,17 +36,11 @@ export default function Home() {
       document.removeEventListener('mousedown', onDocClick);
       document.removeEventListener('keydown', onEsc);
     };
-  }, [discoverOpen, filtersOpen]);
-
-  const toggleTag = (t) => {
-    setSelectedTags((prev) =>
-      prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t]
-    );
-  };
+  }, [discoverOpen]);
 
   return (
     <div className="page-home">
-      {/* Header row with two dropdown triggers */}
+      {/* Header row with Discover selector only */}
       <div className="row home-controls" style={{ marginBottom: 12, gap: 8, flexWrap: 'wrap' }}>
         <h2 style={{ margin: 0 }}>Discover</h2>
         <div className="space" />
@@ -98,85 +81,52 @@ export default function Home() {
             </div>
           )}
         </div>
+      </div>
 
-        {/* Filters dropdown */}
-        <div className="dropdown" ref={filtersRef}>
-          <button
-            className="pill dropdown-trigger"
-            aria-haspopup="dialog"
-            aria-expanded={filtersOpen}
-            aria-controls="filters-menu"
-            onClick={() => setFiltersOpen(v => !v)}
-          >
-            🎛 Filters
-            <span aria-hidden="true">▾</span>
-          </button>
-          {filtersOpen && (
-            <div
-              id="filters-menu"
-              role="dialog"
-              aria-label="Filter films"
-              className="dropdown-menu playful"
-              style={{ width: 280 }}
-            >
-              <div className="muted" style={{ fontSize: 12, marginBottom: 6 }}>Genres</div>
-              <div className="row" style={{ flexWrap: 'wrap', marginBottom: 8 }}>
-                {tags.map(t => (
-                  <button
-                    key={t}
-                    className={`pill chip ${selectedTags.includes(t) ? 'selected' : ''}`}
-                    onClick={() => toggleTag(t)}
-                    aria-pressed={selectedTags.includes(t)}
-                    style={{ margin: 4 }}
-                  >
-                    {t}
-                  </button>
-                ))}
-              </div>
+      {/* Callout & Highlights moved from previous right sidebar */}
+      <div className="row" style={{ gap: 16, alignItems: 'stretch', flexWrap: 'wrap', marginBottom: 16 }}>
+        <div className="card section" style={{ flex: '2 1 420px', minWidth: 280 }}>
+          <div className="row" style={{ justifyContent: 'space-between' }}>
+            <div className="muted">Are you a creator? Share your short with the community.</div>
+            <a className="btn" href="/upload" aria-label="Go to upload">⬆️ Upload your short</a>
+          </div>
+        </div>
 
-              <div className="muted" style={{ fontSize: 12, marginBottom: 6, marginTop: 6 }}>Duration</div>
-              <label className="visually-hidden" htmlFor="duration-select">Duration</label>
-              <select
-                id="duration-select"
-                className="input"
-                value={duration}
-                onChange={(e) => setDuration(e.target.value)}
-              >
-                <option value="any">Any</option>
-                <option value="lt5">&lt; 5 min</option>
-                <option value="5to15">5 - 15 min</option>
-                <option value="gt15">&gt; 15 min</option>
-              </select>
-
-              <div style={{ height: 10 }} />
-              <div className="row" style={{ justifyContent: 'flex-end', gap: 8 }}>
-                <button
-                  className="btn secondary"
-                  onClick={() => {
-                    setSelectedTags([]);
-                    setDuration('any');
-                    setFiltersOpen(false);
-                  }}
-                >
-                  Reset
-                </button>
-                <button
-                  className="btn"
-                  onClick={() => setFiltersOpen(false)}
-                >
-                  Apply
-                </button>
-              </div>
-            </div>
-          )}
+        <div className="card section" style={{ flex: '1 1 300px', minWidth: 260 }}>
+          <strong>Weekly Challenge</strong>
+          <div style={{ height: 8 }} />
+          <div className="muted" style={{ fontSize: 14 }}>Theme: "Unexpected Kindness"</div>
+          <div style={{ height: 10 }} />
+          <a href="/challenges" className="btn">Join Challenge</a>
         </div>
       </div>
 
-      {/* Callout card */}
-      <div className="card section" style={{ marginBottom: 16 }}>
-        <div className="row" style={{ justifyContent: 'space-between' }}>
-          <div className="muted">Are you a creator? Share your short with the community.</div>
-          <a className="btn" href="/upload" aria-label="Go to upload">⬆️ Upload your short</a>
+      <div className="row" style={{ gap: 16, alignItems: 'stretch', flexWrap: 'wrap', marginBottom: 12 }}>
+        <div className="card section" style={{ flex: '1 1 380px', minWidth: 280 }}>
+          <strong>Trending</strong>
+          <div style={{ height: 10 }} />
+          {[
+            { id: 't1', title: 'Moonlit Alley', views: '12.4k' },
+            { id: 't2', title: 'Paper Stars', views: '9.1k' },
+            { id: 't3', title: 'Silent Notes', views: '7.7k' },
+          ].map(t => (
+            <a key={t.id} href={`/film/${t.id}`} className="row" style={{ justifyContent: 'space-between', padding: '8px 0' }}>
+              <span>{t.title}</span>
+              <span className="muted">👁 {t.views}</span>
+            </a>
+          ))}
+        </div>
+
+        <div className="card section" style={{ flex: '1 1 300px', minWidth: 260 }}>
+          <strong>Top Creators</strong>
+          <div style={{ height: 10 }} />
+          {[
+            { id: 'c1', name: 'Ava Reynolds' },
+            { id: 'c2', name: 'Leo Park' },
+            { id: 'c3', name: 'Nora Patel' },
+          ].map(c => (
+            <a key={c.id} href={`/creator/${c.id}`} className="pill" style={{ marginBottom: 8 }}>{c.name}</a>
+          ))}
         </div>
       </div>
 
