@@ -44,7 +44,7 @@ export default function Forums() {
 
       <div className="card section">
         {(threads || []).map(t => (
-          <div key={t.id} className="row" style={{ justifyContent: 'space-between', padding: '10px 0', borderTop: '1px solid var(--cd-border)' }}>
+          <div key={t.id} className="row" style={{ justifyContent: 'space-between', padding: '12px 0', borderTop: '1px solid var(--cd-border)' }}>
             <span>{t.title}</span>
             <span className="muted">{t.replies} replies</span>
           </div>

@@ -99,6 +99,25 @@ img { max-width: 100%; display: block; }
   transition: background-color .25s ease, color .2s ease, border-color .2s ease;
 }
 
+/* Consistent internal padding for sections placed inside cards */
+.card.section {
+  padding: 18px;
+}
+
+/* Slightly larger comfy padding on wide screens */
+@media (min-width: 900px) {
+  .card.section {
+    padding: 22px;
+  }
+}
+
+/* Compact but comfy on small screens */
+@media (max-width: 700px) {
+  .card.section {
+    padding: 16px;
+  }
+}
+
 /* Layout */
 .app-shell {
   display: grid;
