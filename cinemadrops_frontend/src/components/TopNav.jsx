@@ -34,7 +34,9 @@ export default function TopNav() {
           aria-label={isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
           title={isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
         >
-          {isDark ? '🌙 Oscuro' : '☀️ Claro'}
+          <span aria-hidden="true" role="img">
+            {isDark ? '🌙' : '☀️'}
+          </span>
         </button>
       </div>
     </div>
