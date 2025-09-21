@@ -13,97 +13,127 @@ import { getAssetUrl } from '../utils/assets';
  *   Example:
  *     REACT_APP_API_BASE_URL=https://s4myuxoa90.execute-api.us-east-2.amazonaws.com/devops
  *
- * Response shape (from provided Lambda code):
+ * Response shape (from English Lambda code):
  *   {
- *     statusCode: 200,
- *     body: {
- *       videos: [
- *         {
- *           title, genre, author, uploadDate, url, ... // fields may vary or include additional S3 metadata
- *         },
- *         ...
- *       ]
- *     }
+ *     status: "success",
+ *     message: "X videos found",
+ *     total_videos: X,
+ *     videos: [
+ *       {
+ *         id, title, genre, author, upload_date, url, size_mb, filename, s3_key
+ *       },
+ *       ...
+ *     ]
  *   }
- *
- * This component parses response.body.videos if present, or falls back to response.videos or array root.
  */
 export default function Discover() {
   const { useFetch } = useApi();
 
-  // Actual path per Lambda-backed API
+  // Hardcoded API configuration
+  const API_BASE_URL = 'https://s4myuxoa90.execute-api.us-east-2.amazonaws.com/devops';
   const API_VIDEOS_PATH = '/videos_shortfilms';
 
   // We rely on ApiProvider: it prefixes base URL and includes credentials.
-  const { data, error, isLoading } = useFetch(API_VIDEOS_PATH, {
+  // Hardcoded approach - bypassing environment variables
+  const { data, error, isLoading } = useFetch(`${API_BASE_URL}${API_VIDEOS_PATH}`, {
     fallbackData: [],
     revalidateOnFocus: true,
   });
 
   // Normalize backend items to the film structure used by FilmCard/Home.
-  // Supports Lambda body.videos and graceful fallbacks.
+  // Updated for English Lambda response format
   const films = useMemo(() => {
-    // Try to unwrap Lambda envelope: { statusCode, body: { videos: [...] } }
+    // Try to unwrap Lambda response: { status, videos: [...] }
     const unwrap = (() => {
       if (!data) return [];
-      // If data is an array already
+      
+      // If data is an array already (unlikely but possible)
       if (Array.isArray(data)) return data;
+      
+      // Standard Lambda response format: { status: "success", videos: [...] }
+      if (data.videos && Array.isArray(data.videos)) return data.videos;
+      
       // If the lambda body has been stringified JSON, try to parse
-      const body = typeof data.body === 'string'
-        ? safeJsonParse(data.body)
-        : (data.body || {});
-      // Prefer body.videos
-      if (body && Array.isArray(body.videos)) return body.videos;
-      // Also handle top-level data.videos
-      if (Array.isArray(data.videos)) return data.videos;
-      // Some backends might return { items: [...] } or { data: [...] }
+      if (data.body) {
+        const body = typeof data.body === 'string'
+          ? safeJsonParse(data.body)
+          : data.body;
+        if (body && Array.isArray(body.videos)) return body.videos;
+      }
+      
+      // Fallback patterns for other possible response formats
       if (Array.isArray(data.items)) return data.items;
       if (Array.isArray(data.data)) return data.data;
+      
       return [];
     })();
 
     return unwrap.map((item, idx) => {
+      // Primary field mapping for English Lambda
       const id = item.id || item._id || item.key || `video-${idx}`;
-      const title =
-        item.title ||
-        item.name ||
-        item.filename ||
-        `Video ${idx + 1}`;
-      const author =
-        item.author ||
-        item.autor ||
-        item.uploader ||
-        item.owner ||
-        'Unknown';
-      const url =
-        item.url ||
-        item.link ||
-        item.Location ||
-        item.signedUrl ||
-        item.videoUrl ||
-        '';
-      const duration =
-        item.duration ??
-        item.length ??
-        item.seconds ??
-        0;
-      const likes =
-        item.likes ??
-        item.stars ??
-        item.hearts ??
-        0;
-      const genre = item.genre || item.category || item.type || null;
-      const uploadDate = item.uploadDate || item.date || item.createdAt || item.LastModified || null;
+      
+      // Title mapping - prioritize English fields, fallback to Spanish
+      const title = item.title || 
+                   item.name || 
+                   item.nombre ||  // Spanish fallback
+                   item.filename?.replace(/\.[^/.]+$/, '') || // Remove file extension
+                   `Video ${idx + 1}`;
+      
+      // Author mapping - prioritize English fields, fallback to Spanish
+      const author = item.author || 
+                    item.creator ||
+                    item.autor ||  // Spanish fallback
+                    item.uploader || 
+                    item.owner || 
+                    'Unknown';
+      
+      // URL mapping
+      const url = item.url || 
+                 item.link || 
+                 item.Location || 
+                 item.signedUrl || 
+                 item.videoUrl || 
+                 '';
+      
+      // Duration and likes (optional fields)
+      const duration = item.duration ?? 
+                      item.length ?? 
+                      item.seconds ?? 
+                      0;
+      
+      const likes = item.likes ?? 
+                   item.stars ?? 
+                   item.hearts ?? 
+                   item.views ?? 
+                   0;
+      
+      // Genre mapping
+      const genre = item.genre || 
+                   item.category || 
+                   item.type || 
+                   'Uncategorized';
+      
+      // Upload date mapping - prioritize English fields, fallback to Spanish
+      const uploadDate = item.upload_date || 
+                        item.uploadDate || 
+                        item.fecha_subida ||  // Spanish fallback
+                        item.date || 
+                        item.createdAt || 
+                        item.LastModified || 
+                        null;
 
-      // cover/poster/thumbnail when available
-      const cover =
-        item.cover_image ||
-        item.cover ||
-        item.coverUrl ||
-        item.thumbnail ||
-        item.thumbnailUrl ||
-        item.poster ||
-        null;
+      // Cover/poster/thumbnail when available
+      const cover = item.cover_image ||
+                   item.cover ||
+                   item.coverUrl ||
+                   item.thumbnail ||
+                   item.thumbnailUrl ||
+                   item.poster ||
+                   null;
+
+      // Additional metadata from S3
+      const size_mb = item.size_mb || 0;
+      const filename = item.filename || null;
 
       return {
         id,
@@ -115,11 +145,14 @@ export default function Discover() {
         cover,
         genre,
         uploadDate,
+        // Additional fields for potential future use
+        size_mb,
+        filename,
       };
     });
   }, [data]);
 
-  // Small selection of asset images to serve as placeholders when no cover is provided.
+  // Asset gallery for placeholder images when no cover is provided
   const assetGallery = [
     getAssetUrl('/assets/pexels-amar-29656074.jpg'),
     getAssetUrl('/assets/pexels-jillyjillystudio-33962662.jpg'),
@@ -130,14 +163,14 @@ export default function Discover() {
   const defaultPlaceholder = assetGallery[0];
 
   const pickPreviewImage = (film, index) => {
-    const img =
-      film.cover ||
-      film.cover_image ||
-      film.coverUrl ||
-      film.thumbnail ||
-      film.thumbnailUrl ||
-      film.poster ||
-      null;
+    const img = film.cover ||
+               film.cover_image ||
+               film.coverUrl ||
+               film.thumbnail ||
+               film.thumbnailUrl ||
+               film.poster ||
+               null;
+    
     if (img) return getAssetUrl(img);
     if (assetGallery.length === 0) return defaultPlaceholder;
     return assetGallery[index % assetGallery.length];
@@ -155,48 +188,120 @@ export default function Discover() {
         <span className="pill" aria-pressed="false">Awarded</span>
       </div>
 
-      {/* Loading and error states */}
-      {isLoading && (
-        <div className="card section" role="status">
-          Loading S3 videos...
-        </div>
-      )}
-      {error && (
-        <div className="card section" role="alert">
-          Could not load videos from API.
-          {/* Developer note:
-             Ensure REACT_APP_API_BASE or REACT_APP_API_BASE_URL is set and accessible.
-             This page integrates with the real Lambda-backed API at GET /videos_shortfilms.
-          */}
+      {/* Debug info in development */}
+      {process.env.NODE_ENV === 'development' && (
+        <div style={{ 
+          background: '#f8f9fa', 
+          padding: '10px', 
+          margin: '10px 0', 
+          borderRadius: '4px', 
+          fontSize: '12px',
+          fontFamily: 'monospace',
+          color: '#666'
+        }}>
+          Debug: {films.length} films loaded from {data?.total_videos || 'unknown'} total videos
+          {data?.status && ` (API Status: ${data.status})`}
         </div>
       )}
 
-      {/* Results */}
-      <div className="film-grid">
-        {films.map((f, idx) => (
-          <FilmCard
-            key={f.id}
-            film={{
-              id: f.id,
-              title: f.title,
-              author: f.author,
-              likes: f.likes,
-              duration: f.duration,
-              // Extra fields retained for future detail/player usage:
-              genre: f.genre,
-              uploadDate: f.uploadDate,
-              url: f.url,
-            }}
-            placeholderImage={defaultPlaceholder}
-            previewImage={pickPreviewImage(f, idx)}
-          />
-        ))}
-      </div>
+      {/* Loading state */}
+      {isLoading && (
+        <div className="card section" role="status">
+          <div style={{ textAlign: 'center', padding: '20px' }}>
+            Loading videos from S3...
+          </div>
+        </div>
+      )}
+
+      {/* Error state - Enhanced debugging */}
+      {error && (
+        <div className="card section" role="alert">
+          <div style={{ color: '#dc3545' }}>
+            <strong>Could not load videos from API</strong>
+            <div style={{ fontSize: '14px', marginTop: '8px' }}>
+              <strong>Error:</strong> {error.toString()}
+            </div>
+            <div style={{ fontSize: '12px', marginTop: '12px', fontFamily: 'monospace', background: '#f8f9fa', padding: '8px', borderRadius: '4px' }}>
+              <div><strong>Debug Information:</strong></div>
+              <div>API Path: {API_VIDEOS_PATH}</div>
+              <div>Base URL: {API_BASE_URL}</div>
+              <div>Full URL: {API_BASE_URL + API_VIDEOS_PATH}</div>
+              <div>Error Type: {error?.name || 'Unknown'}</div>
+              <div>Network Error: {error?.message?.includes('fetch') ? 'Yes (CORS/Network issue)' : 'No'}</div>
+            </div>
+            <div style={{ fontSize: '12px', color: '#666', marginTop: '8px' }}>
+              <strong>Common solutions:</strong>
+              <br />
+              1. Check if REACT_APP_API_BASE_URL is set in your .env file
+              <br />
+              2. Verify API Gateway URL is correct and accessible
+              <br />
+              3. Ensure CORS is enabled in API Gateway
+              <br />
+              4. Check browser console for network errors
+            </div>
+            <button 
+              onClick={() => window.location.reload()}
+              style={{
+                marginTop: '12px',
+                padding: '8px 16px',
+                background: '#007bff',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer'
+              }}
+            >
+              Retry Loading
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Results grid */}
+      {!isLoading && !error && films.length > 0 && (
+        <div className="film-grid">
+          {films.map((f, idx) => (
+            <FilmCard
+              key={f.id}
+              film={{
+                id: f.id,
+                title: f.title,
+                author: f.author,
+                likes: f.likes,
+                duration: f.duration,
+                genre: f.genre,
+                uploadDate: f.uploadDate,
+                url: f.url,
+                // Additional metadata
+                size_mb: f.size_mb,
+                filename: f.filename,
+              }}
+              placeholderImage={defaultPlaceholder}
+              previewImage={pickPreviewImage(f, idx)}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Empty state */}
       {!isLoading && !error && films.length === 0 && (
         <div className="card section">
-          <div className="muted">No videos available yet.</div>
+          <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+            <div style={{ fontSize: '48px', marginBottom: '16px' }}>📹</div>
+            <div className="muted" style={{ fontSize: '18px', marginBottom: '8px' }}>
+              No videos available yet
+            </div>
+            <div style={{ fontSize: '14px', color: '#666' }}>
+              Upload your first video to get started
+            </div>
+            {data && (
+              <div style={{ fontSize: '12px', color: '#999', marginTop: '16px' }}>
+                API Response: {data.status || 'unknown'} 
+                {data.message && ` - ${data.message}`}
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>
