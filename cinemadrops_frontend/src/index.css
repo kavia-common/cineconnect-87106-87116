@@ -31,7 +31,7 @@ img { max-width: 100%; display: block; }
 
 .container {
   width: 100%;
-  max-width: 1280px;
+  max-width: 1320px; /* give a bit more room for bigger cards */
   margin: 0 auto;
   padding: 0 16px;
 }
@@ -62,6 +62,11 @@ img { max-width: 100%; display: block; }
   border-radius: var(--cd-radius);
   overflow: hidden;
   box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+  transition: transform .18s ease, box-shadow .25s ease;
+}
+.card.film-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 36px rgba(0,0,0,0.08);
 }
 
 /* Layout */
@@ -116,31 +121,68 @@ img { max-width: 100%; display: block; }
 .sidebar .section { padding: 12px; }
 
 /* Film grid */
+/* Make thumbnails significantly larger by reducing columns and increasing spans. Maintain a playful rhythm with responsive steps. */
 .film-grid {
   display: grid;
-  grid-template-columns: repeat(12, 1fr);
-  gap: 16px;
-}
-@media (max-width: 1100px) {
-  .film-grid { grid-template-columns: repeat(6, 1fr); }
-}
-@media (max-width: 700px) {
-  .film-grid { grid-template-columns: repeat(2, 1fr); }
+  grid-template-columns: repeat(8, 1fr); /* fewer columns -> bigger cards */
+  gap: 18px;
 }
 
-/* Film card */
+/* Large desktops: comfortable 3 cards per row (each spans 8/3 ≈ 2.66 -> use span 3) */
 .film-card { grid-column: span 3; overflow: hidden; display: flex; flex-direction: column; }
-.film-thumb { aspect-ratio: 16/9; background: #eef6f7; position: relative; border-bottom-left-radius: var(--cd-radius); border-bottom-right-radius: var(--cd-radius); }
-.film-thumb .badge {
-  position: absolute; top: 10px; left: 10px; padding: 6px 10px; font-size: 12px; border-radius: 999px;
-  background: rgba(255,255,255,.9); color: #333; border: 1px solid var(--cd-border);
+
+/* Medium desktops/tablets: 2 cards per row */
+@media (max-width: 1200px) {
+  .film-grid { grid-template-columns: repeat(6, 1fr); }
+  .film-card { grid-column: span 3; }
 }
-.film-meta { padding: 12px; display: grid; gap: 6px; }
-.film-title { font-weight: 800; }
-.film-author { color: var(--cd-muted); font-size: 13px; }
+
+/* Tablets / large phones: 2 larger cards per row */
+@media (max-width: 900px) {
+  .film-grid { grid-template-columns: repeat(4, 1fr); }
+  .film-card { grid-column: span 2; }
+}
+
+/* Small phones: single-column big hero-like cards */
+@media (max-width: 580px) {
+  .film-grid { grid-template-columns: repeat(2, 1fr); }
+  .film-card { grid-column: span 2; }
+}
+
+/* Film card visuals */
+.film-thumb {
+  aspect-ratio: 16/9;
+  background: #eef6f7;
+  position: relative;
+  border-bottom-left-radius: var(--cd-radius);
+  border-bottom-right-radius: var(--cd-radius);
+}
+
+/* Slightly bigger badge to match larger visuals */
+.film-thumb .badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  padding: 8px 12px;
+  font-size: 13px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.92);
+  color: #333;
+  border: 1px solid var(--cd-border);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.06);
+}
+
+.film-meta {
+  padding: 14px;
+  display: grid;
+  gap: 6px;
+}
+
+.film-title { font-weight: 900; font-size: 16px; }
+.film-author { color: var(--cd-muted); font-size: 13.5px; }
 
 /* Rightbar */
-.rightbar { display: flex; flex-direction: column; gap: 16px; }
+.rightbar { display: flex; flex-direction: column; gap: 18px; }
 
 /* Drawers */
 .drawer {
