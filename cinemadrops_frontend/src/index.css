@@ -168,7 +168,8 @@ img { max-width: 100%; display: block; }
 .film-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 22px;
+  /* external spacing between cards */
+  gap: 24px;
 }
 @media (max-width: 1100px) {
   .film-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -183,6 +184,8 @@ img { max-width: 100%; display: block; }
   display: flex;
   flex-direction: column;
   border-radius: calc(var(--cd-radius));
+  /* external padding (card-to-card spacing) */
+  margin: 4px; /* creates a subtle breathing room within the grid gap */
 }
 
 /* Larger preview area (taller on mobile for stronger impact) */
@@ -211,7 +214,14 @@ img { max-width: 100%; display: block; }
   box-shadow: 0 6px 18px rgba(0,0,0,.08);
 }
 
-.film-meta { padding: 16px; display: grid; gap: 6px; }
+.film-meta { padding: 18px; display: grid; gap: 6px; }
+
+@media (max-width: 700px) {
+  .film-card {
+    margin: 6px; /* a tad more breathing space on tight layouts */
+  }
+  .film-meta { padding: 16px; } /* keep mobile compact while still comfy */
+}
 .film-title { font-weight: 800; font-size: 1.08rem; }
 .film-author { color: var(--cd-muted); font-size: 13.5px; }
 
