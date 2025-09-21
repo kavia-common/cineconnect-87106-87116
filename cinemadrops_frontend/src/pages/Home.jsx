@@ -21,6 +21,13 @@ export default function Home() {
         <span className="pill">Awarded</span>
       </div>
 
+      <div className="card section" style={{ marginBottom: 16 }}>
+        <div className="row" style={{ justifyContent: 'space-between' }}>
+          <div className="muted">Are you a creator? Share your short with the community.</div>
+          <a className="btn" href="/upload" aria-label="Go to upload">⬆️ Upload your short</a>
+        </div>
+      </div>
+
       <div className="film-grid">
         {films.map(f => <FilmCard key={f.id} film={f} />)}
       </div>

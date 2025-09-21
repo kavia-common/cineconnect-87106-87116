@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import './index.css';
 import { ApiProvider } from './services/Api';
@@ -13,29 +13,16 @@ import Forums from './pages/Forums';
 import Challenges from './pages/Challenges';
 import Curated from './pages/Curated';
 import NotFound from './pages/NotFound';
-import ChatDrawer from './drawers/ChatDrawer';
-import NotificationsDrawer from './drawers/NotificationsDrawer';
-import QuickActionsDrawer from './drawers/QuickActionsDrawer';
+import Upload from './pages/Upload';
 
 // PUBLIC_INTERFACE
 function App() {
-  /** Root state for drawers */
-  const [openDrawer, setOpenDrawer] = useState(null); // 'chat' | 'notif' | 'quick' | null
-
-  const drawerApi = useMemo(() => ({
-    open: (name) => setOpenDrawer(name),
-    close: () => setOpenDrawer(null),
-    isOpen: (name) => openDrawer === name
-  }), [openDrawer]);
-
   return (
     <BrowserRouter>
       <ApiProvider>
         <SocketProvider>
           <div className="app-shell">
-            <TopNav onOpenChat={() => setOpenDrawer('chat')}
-                    onOpenNotifications={() => setOpenDrawer('notif')}
-                    onOpenQuick={() => setOpenDrawer('quick')} />
+            <TopNav />
             <div className="main-grid container">
               <aside className="sidebar">
                 <LeftSidebar />
@@ -48,6 +35,7 @@ function App() {
                   <Route path="/forums/*" element={<Forums />} />
                   <Route path="/challenges" element={<Challenges />} />
                   <Route path="/curated" element={<Curated />} />
+                  <Route path="/upload" element={<Upload />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </main>
@@ -55,10 +43,6 @@ function App() {
                 <RightSidebar />
               </aside>
             </div>
-
-            <ChatDrawer open={drawerApi.isOpen('chat')} onClose={drawerApi.close} />
-            <NotificationsDrawer open={drawerApi.isOpen('notif')} onClose={drawerApi.close} />
-            <QuickActionsDrawer open={drawerApi.isOpen('quick')} onClose={drawerApi.close} />
           </div>
         </SocketProvider>
       </ApiProvider>

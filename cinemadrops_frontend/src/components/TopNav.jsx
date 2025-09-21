@@ -3,9 +3,9 @@ import { Link, NavLink } from 'react-router-dom';
 
 /**
  * PUBLIC_INTERFACE
- * TopNav renders the top navigation bar with brand, search, and quick actions.
+ * TopNav renders the top navigation bar with brand, search, and primary navigation.
  */
-export default function TopNav({ onOpenChat, onOpenNotifications, onOpenQuick }) {
+export default function TopNav() {
   return (
     <div className="topnav">
       <div className="topnav-inner container">
@@ -21,11 +21,8 @@ export default function TopNav({ onOpenChat, onOpenNotifications, onOpenQuick })
           <NavLink to="/curated" className="pill">Curated</NavLink>
           <NavLink to="/challenges" className="pill">Challenges</NavLink>
           <NavLink to="/forums" className="pill">Forums</NavLink>
+          <NavLink to="/upload" className="btn" aria-label="Upload short">⬆️ Upload</NavLink>
         </nav>
-        <div className="space" />
-        <button className="btn secondary" onClick={onOpenQuick} aria-label="Quick actions">⚡ Quick</button>
-        <button className="btn" onClick={onOpenChat} aria-label="Open chat">💬 Chat</button>
-        <button className="btn" onClick={onOpenNotifications} aria-label="Open notifications">🔔</button>
       </div>
     </div>
   );

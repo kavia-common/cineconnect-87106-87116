@@ -159,4 +159,5 @@ img { max-width: 100%; display: block; }
 .input {
   width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--cd-border); background: #fff;
 }
+input.input, textarea.input { font-family: inherit; }
 .badge { padding: 4px 8px; border-radius: 8px; background: #f2fafb; color: #0f6c77; font-weight: 700; font-size: 12px; border: 1px solid #d8eef0; }

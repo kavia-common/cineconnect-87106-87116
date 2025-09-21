@@ -6,8 +6,8 @@ Cinemadrops is a playful, community-driven platform for short films. This fronte
 - Creator profiles
 - Comments and forums
 - Weekly challenges
-- Live chat and real-time notifications via WebSockets
-- Responsive multi-column layout with top navigation, sidebars, and modal drawers
+- Video upload page for creators (supports mp4, avi, mov, webm, mkv) with progress and success/error feedback
+- Responsive multi-column layout with top navigation, sidebars
 
 ## Tech
 - React 18 + React Router v6
