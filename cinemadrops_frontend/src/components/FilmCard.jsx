@@ -15,32 +15,30 @@ export default function FilmCard({ film, index = 0, image }) {
 
   return (
     <Link to={`/film/${film.id}`} className="card film-card" aria-label={`${film.title} by ${film.author}`}>
-      <div className="film-thumb" style={{ position: 'relative', overflow: 'hidden' }}>
+      {/* Media wrapper: edge-to-edge image clipped by card's rounded corners */}
+      <div className="film-thumb" aria-hidden="true">
         {showImage ? (
           <img
             src={image}
-            alt={`${film.title} cover`}
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            alt=""
+            role="presentation"
+            className="film-thumb-img"
             loading="lazy"
             onError={() => setImgOk(false)}
           />
         ) : (
-          <div
-            aria-hidden="true"
-            style={{
-              position: 'absolute',
-              inset: 0,
-              background: 'var(--cd-gradient)',
-            }}
-          />
+          <div className="film-thumb-fallback" />
         )}
         {!showImage && (
           <span className="visually-hidden" aria-live="polite">
             Cover image unavailable; showing placeholder.
           </span>
         )}
+        {/* Overlay badge stays inside media, spaced from edges by its own padding */}
         <div className="badge">★ {film.likes} • ⏱ {film.duration}m</div>
       </div>
+
+      {/* Content/body with generous padding so text/buttons never hug edges */}
       <div className="film-meta">
         <div className="film-title">{film.title}</div>
         <div className="film-author">by {film.author}</div>

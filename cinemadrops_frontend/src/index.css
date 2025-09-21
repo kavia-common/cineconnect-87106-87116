@@ -42,11 +42,12 @@ body {
 a { color: inherit; text-decoration: none; }
 img { max-width: 100%; display: block; }
 
-/* images inside padded thumb should fill available area */
-.film-thumb > img {
+/* images inside media area fill available space */
+.film-thumb-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
 }
 
 .container {
@@ -180,6 +181,13 @@ html[data-theme="dark"] .film-grid-section {
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.14);
 }
 
+/* Fallback media background when no image is available */
+.film-thumb-fallback {
+  position: absolute;
+  inset: 0;
+  background: var(--cd-gradient);
+}
+
 /* Ensure section padding breathes nicely on small screens */
 @media (max-width: 980px) {
   .film-grid-section {
@@ -227,15 +235,13 @@ html[data-theme="dark"] .film-grid-section {
   .film-card { grid-column: span 1; }
 }
 
-/* Film card visuals: Slightly taller aspect ratio to feel more cinematic in grid */
+/* Film card media (edge-to-edge) */
 .film-thumb {
-  aspect-ratio: 16/9; /* slightly taller to emphasize video */
+  aspect-ratio: 16/9;
   background: rgba(15,163,177,0.10);
   position: relative;
-  border-bottom-left-radius: var(--cd-radius);
-  border-bottom-right-radius: var(--cd-radius);
-  /* internal inset padding so overlays/images don't visually hug the border */
-  padding: 2px;
+  /* No inner padding: image reaches edges; clip to card rounding via overflow */
+  overflow: hidden;
 }
 
 /* Simplified discover layout: single column since quick tags/promo aside removed */
@@ -317,15 +323,19 @@ html[data-theme="dark"] .film-grid-section {
 /* Slightly bigger badge to match larger visuals */
 .film-thumb .badge {
   position: absolute;
-  top: 14px; /* a bit more breathing from the top */
-  left: 14px; /* and from the left edge */
-  padding: 9px 13px; /* slightly larger for touch targets */
+  top: 12px;
+  left: 12px;
+  padding: 9px 13px;
   font-size: 13px;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--cd-surface) 92%, transparent);
+  background: color-mix(in srgb, var(--cd-surface) 90%, transparent);
   color: var(--cd-text);
   border: 1px solid var(--cd-border);
   box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+}
+html[data-theme="dark"] .film-thumb .badge {
+  background: color-mix(in srgb, var(--cd-surface) 84%, transparent);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.32);
 }
 
 .film-meta {
