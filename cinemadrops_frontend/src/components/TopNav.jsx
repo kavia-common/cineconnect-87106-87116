@@ -21,6 +21,7 @@ export default function TopNav() {
           <NavLink to="/curated" className="pill">Curated</NavLink>
           <NavLink to="/challenges" className="pill">Challenges</NavLink>
           <NavLink to="/forums" className="pill">Forums</NavLink>
+          <NavLink to="/profile" className="pill">Profile</NavLink>
           <NavLink to="/upload" className="btn" aria-label="Upload short">⬆️ Upload</NavLink>
         </nav>
       </div>
