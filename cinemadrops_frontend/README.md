@@ -23,6 +23,15 @@ Cinemadrops is a playful, community-driven platform for short films. This fronte
   - `<img src="/assets/pexels-alvarobalderas-20747775.jpg" alt="..." />`
 - See `src/assets/images.js` which exports absolute URLs for existing demo images.
 
+Troubleshooting
+- Direct access test: Open http://localhost:3000/assets/pexels-alvarobalderas-20747775.jpg in your browser. If you see the image (status 200), the asset is correctly placed and served.
+- 404 errors: Ensure the filename (including case and extension) matches exactly across:
+  - The file in `public/assets`
+  - The URL used in `<img src="/assets/..." />`
+  - The entry in `src/assets/images.js`
+- Cache: If the image file was replaced with the same name, hard refresh the browser (Ctrl+Shift+R) to bypass cache.
+- In components, images are passed as absolute URLs (e.g., from `getCoverByIndex`). The FilmCard displays the gradient only when `image` is falsy; ensure a non-empty string is provided.
+
 ## Run locally
 1) Copy environment config
 ```
