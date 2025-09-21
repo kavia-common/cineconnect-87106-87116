@@ -32,6 +32,9 @@ export default function FilmDetails() {
   const [awsLoading, setAwsLoading] = useState(!filmFromState);
   const [awsError, setAwsError] = useState(null);
 
+  // DEBUG STATE for API errors (details + raw)
+  const [awsErrorDebug, setAwsErrorDebug] = useState(null); // { message, status, statusText, url, responseText? }
+
   useEffect(() => {
     if (filmFromState) {
       // We already have data; no need to fetch
@@ -42,10 +45,27 @@ export default function FilmDetails() {
     async function fetchAws() {
       setAwsLoading(true);
       setAwsError(null);
+      setAwsErrorDebug(null);
       try {
         const url = buildAwsUrl(slug);
         const res = await fetch(url, { headers: { Accept: 'application/json' } });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        if (!res.ok) {
+          // DEBUG: capture response text to expose in UI and console
+          let responseText = '';
+          try { responseText = await res.text(); } catch { /* ignore */ }
+          const errObj = {
+            message: `HTTP ${res.status} ${res.statusText}`,
+            status: res.status,
+            statusText: res.statusText,
+            url,
+            responseText,
+          };
+          // Console debug (raw)
+          // DEBUG: AWS film fetch error (details)
+          // eslint-disable-next-line no-console
+          console.error('[FilmDetails][AWS fetch error]', errObj);
+          throw Object.assign(new Error(errObj.message), errObj);
+        }
         const ct = res.headers.get('content-type') || '';
         let body;
         if (ct.includes('application/json')) {
@@ -57,7 +77,17 @@ export default function FilmDetails() {
         const item = normalizeAwsFilm(body, slug);
         if (!cancelled) setAwsFilm(item);
       } catch (e) {
-        if (!cancelled) setAwsError(e);
+        if (!cancelled) {
+          setAwsError(e);
+          // DEBUG: set structured error for UI panel
+          setAwsErrorDebug({
+            message: e?.message || 'Unknown error',
+            status: e?.status ?? undefined,
+            statusText: e?.statusText ?? undefined,
+            url: e?.url ?? undefined,
+            responseText: e?.responseText ?? undefined,
+          });
+        }
       } finally {
         if (!cancelled) setAwsLoading(false);
       }
@@ -161,6 +191,9 @@ export default function FilmDetails() {
   const [playLoading, setPlayLoading] = useState(false);
   const [playError, setPlayError] = useState('');
 
+  // DEBUG STATE for video fetch play error
+  const [playErrorDebug, setPlayErrorDebug] = useState(null); // { message, status, statusText, url, responseText? }
+
   // PUBLIC_INTERFACE
   async function handlePlay() {
     /**
@@ -177,6 +210,7 @@ export default function FilmDetails() {
      */
     setPlayLoading(true);
     setPlayError('');
+    setPlayErrorDebug(null);
     setVideoSrc('');
     try {
       const base = (process.env.REACT_APP_API_BASE_URL || process.env.REACT_APP_API_BASE || 'https://s4myuxoa90.execute-api.us-east-2.amazonaws.com/devops').replace(/\/$/, '');
@@ -184,7 +218,20 @@ export default function FilmDetails() {
       const res = await fetch(endpoint, { method: 'GET' });
 
       if (!res.ok) {
-        throw new Error(`HTTP ${res.status} ${res.statusText}`);
+        // DEBUG: capture raw response for console + UI
+        let responseText = '';
+        try { responseText = await res.text(); } catch { /* ignore */ }
+        const errObj = {
+          message: `HTTP ${res.status} ${res.statusText}`,
+          status: res.status,
+          statusText: res.statusText,
+          url: endpoint,
+          responseText,
+        };
+        // DEBUG: Video fetch error (raw)
+        // eslint-disable-next-line no-console
+        console.error('[FilmDetails][Video fetch error]', errObj);
+        throw Object.assign(new Error(errObj.message), errObj);
       }
 
       const contentType = res.headers.get('content-type') || '';
@@ -273,6 +320,14 @@ export default function FilmDetails() {
       }
     } catch (err) {
       setPlayError(err?.message || 'Could not load the video.');
+      // DEBUG: store full error for UI panel
+      setPlayErrorDebug({
+        message: err?.message || 'Unknown error',
+        status: err?.status ?? undefined,
+        statusText: err?.statusText ?? undefined,
+        url: err?.url ?? undefined,
+        responseText: err?.responseText ?? undefined,
+      });
     } finally {
       setPlayLoading(false);
     }
@@ -290,6 +345,34 @@ export default function FilmDetails() {
     return (
       <div className="card section" role="alert">
         Could not load the film details.
+        {/* DEBUG PANEL: AWS details fetch error */}
+        {awsErrorDebug && (
+          <div
+            className="pill"
+            style={{
+              marginTop: 10,
+              whiteSpace: 'pre-wrap',
+              wordBreak: 'break-word',
+              background: 'var(--cd-chip-bg)',
+              borderColor: 'var(--cd-error)',
+              color: 'inherit',
+              display: 'block'
+            }}
+          >
+            <strong style={{ display: 'block', marginBottom: 6 }}>Debug Info (Film Details Error)</strong>
+            <div><strong>Message:</strong> {String(awsErrorDebug.message || '')}</div>
+            {awsErrorDebug.status !== undefined && (
+              <div><strong>Status:</strong> {String(awsErrorDebug.status)} {awsErrorDebug.statusText ? `- ${awsErrorDebug.statusText}` : ''}</div>
+            )}
+            {awsErrorDebug.url && <div><strong>URL:</strong> {awsErrorDebug.url}</div>}
+            {awsErrorDebug.responseText && (
+              <details style={{ marginTop: 6 }}>
+                <summary>Raw response</summary>
+                <pre style={{ overflowX: 'auto' }}>{awsErrorDebug.responseText}</pre>
+              </details>
+            )}
+          </div>
+        )}
       </div>
     );
   }
@@ -406,6 +489,36 @@ export default function FilmDetails() {
               </span>
             )}
           </div>
+
+          {/* DEBUG PANEL: Video fetch error info (non-intrusive) */}
+          {playErrorDebug && (
+            <div
+              className="pill"
+              style={{
+                marginTop: 10,
+                background: 'var(--cd-chip-bg)',
+                borderColor: 'var(--cd-error)',
+                color: 'inherit',
+                display: 'block',
+                whiteSpace: 'pre-wrap',
+                wordBreak: 'break-word'
+              }}
+              role="status"
+            >
+              <strong style={{ display: 'block', marginBottom: 6 }}>Debug Info (Video Fetch)</strong>
+              <div><strong>Message:</strong> {String(playErrorDebug.message || '')}</div>
+              {playErrorDebug.status !== undefined && (
+                <div><strong>Status:</strong> {String(playErrorDebug.status)} {playErrorDebug.statusText ? `- ${playErrorDebug.statusText}` : ''}</div>
+              )}
+              {playErrorDebug.url && <div><strong>URL:</strong> {playErrorDebug.url}</div>}
+              {playErrorDebug.responseText && (
+                <details style={{ marginTop: 6 }}>
+                  <summary>Raw response</summary>
+                  <pre style={{ overflowX: 'auto' }}>{playErrorDebug.responseText}</pre>
+                </details>
+              )}
+            </div>
+          )}
 
           {/* Video player appears after we have a source */}
           {videoSrc ? (
