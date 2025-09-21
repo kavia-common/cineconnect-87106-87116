@@ -1,7 +1,9 @@
-//
-// PUBLIC_INTERFACE
-// assetsImages exports the list of available cover images bundled under /assets/*
-// The paths are absolute from the web root so they work in dev and prod.
+/**
+ * PUBLIC_INTERFACE
+ * assetsImages exports the list of available cover images served from the public /assets folder.
+ * We use absolute URLs (from web root) so dev/prod paths are correct without importing outside src.
+ * Note: Place images under public/assets/* at build/deploy time.
+ */
 export const assetsImages = [
   "/assets/pexels-alvarobalderas-20747775.jpg",
   "/assets/pexels-amar-29656074.jpg",
@@ -13,10 +15,12 @@ export const assetsImages = [
   "/assets/pexels-kalistro666-29263909.jpg",
 ];
 
-// PUBLIC_INTERFACE
+/**
+ * PUBLIC_INTERFACE
+ * Returns a cover URL cycling over the assetsImages by index, or null if none available.
+ */
 export function getCoverByIndex(index) {
-  /** Returns a cover URL cycling over the assetsImages by index, or null if none available. */
   if (!assetsImages || assetsImages.length === 0) return null;
-  const idx = Math.abs(index) % assetsImages.length;
+  const idx = Math.abs(Number.isFinite(index) ? index : 0) % assetsImages.length;
   return assetsImages[idx];
 }
