@@ -135,7 +135,7 @@ export default function VideoUploadSection() {
     setStatus({ type: 'info', text: 'Reading file...' });
 
     try {
-      // Read as base64 data URL
+      // Read as base64 Data URL (e.g. "data:video/mp4;base64,AAAA...")
       const fileAsDataUrl = await new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onprogress = (evt) => {
@@ -149,18 +149,33 @@ export default function VideoUploadSection() {
         reader.readAsDataURL(file);
       });
 
+      // Extract the base64 content part after the first comma, with fallback to the entire string
+      let base64Content = '';
+      if (typeof fileAsDataUrl === 'string') {
+        const commaIdx = fileAsDataUrl.indexOf(',');
+        base64Content = commaIdx >= 0 ? fileAsDataUrl.slice(commaIdx + 1) : fileAsDataUrl;
+      } else {
+        throw new Error('Invalid file content read.');
+      }
+
       setStatus({ type: 'info', text: 'Uploading to server...' });
       setProgress(100); // reading complete
 
-      // Prepare JSON payload consistent with provided script expectation
+      // Prepare JSON payload required by AWS API
+      // The backend expects:
+      //  - file_content: base64 string (no data: prefix)
+      //  - nombre: video name/title
+      //  - autor: author/creator
+      //  - genre: genre string
+      //  - content_type: MIME type (e.g., video/mp4)
+      //  - filename: original filename (extra metadata)
       const payload = {
-        name,
-        author,
+        file_content: base64Content,
+        nombre: name,
+        autor: author,
         genre,
-        file: fileAsDataUrl, // base64 data URL
+        content_type: file.type || 'application/octet-stream',
         filename: file.name,
-        contentType: file.type,
-        size: file.size,
       };
 
       const res = await fetch(API_ENDPOINT, {
