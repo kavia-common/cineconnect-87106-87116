@@ -4,7 +4,7 @@ import Discover from './Discover';
 /**
  * PUBLIC_INTERFACE
  * Home renders the Discover feed from the backend.
- * Filters UI previously present has been replaced with the Discover component that fetches S3 videos.
+ * Uses the real AWS Lambda-backed GET /videos_shortfilms via Discover component.
  */
 export default function Home() {
   return (

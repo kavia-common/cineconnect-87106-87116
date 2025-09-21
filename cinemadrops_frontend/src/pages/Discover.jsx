@@ -5,44 +5,69 @@ import { getAssetUrl } from '../utils/assets';
 
 /**
  * PUBLIC_INTERFACE
- * Discover fetches the list of videos from the backend (S3 metadata/URLs) and shows them
- * in the film grid. Handles loading and error states gracefully.
+ * Discover fetches the list of videos from the Lambda-backed API Gateway and renders them.
  *
- * Expected backend endpoint:
- * - GET /api/videos (or similar) -> returns an array of video items with at least an URL
+ * Backend: AWS Lambda via HTTP API (GET /videos_shortfilms)
+ * - This component uses the real Lambda-backed endpoint returning S3-listed videos.
+ * - Set REACT_APP_API_BASE (or REACT_APP_API_BASE_URL) in your environment to the API Gateway base URL.
+ *   Example:
+ *     REACT_APP_API_BASE_URL=https://s4myuxoa90.execute-api.us-east-2.amazonaws.com/devops
  *
- * NOTE: If your backend uses a different endpoint or payload shape, update the constant
- * API_VIDEOS_PATH below. Please provide the exact endpoint path and field names if available.
+ * Response shape (from provided Lambda code):
+ *   {
+ *     statusCode: 200,
+ *     body: {
+ *       videos: [
+ *         {
+ *           title, genre, author, uploadDate, url, ... // fields may vary or include additional S3 metadata
+ *         },
+ *         ...
+ *       ]
+ *     }
+ *   }
+ *
+ * This component parses response.body.videos if present, or falls back to response.videos or array root.
  */
 export default function Discover() {
   const { useFetch } = useApi();
 
-  // TODO: Request backend to confirm the correct endpoint path.
-  // Placeholder assumed path. Adjust to your backend specification:
-  // - If your backend exposes `/videos_shortfilms` or `/videos`, update here.
-  const API_VIDEOS_PATH = '/api/videos'; // <-- Please confirm and replace if different.
+  // Actual path per Lambda-backed API
+  const API_VIDEOS_PATH = '/videos_shortfilms';
 
   // We rely on ApiProvider: it prefixes base URL and includes credentials.
   const { data, error, isLoading } = useFetch(API_VIDEOS_PATH, {
-    // In absence of the backend, we can show an empty array as fallback.
     fallbackData: [],
-    // Revalidate on focus to keep the feed updated
     revalidateOnFocus: true,
   });
 
   // Normalize backend items to the film structure used by FilmCard/Home.
-  // We accept many possible field names so various backends can work without extra code changes.
+  // Supports Lambda body.videos and graceful fallbacks.
   const films = useMemo(() => {
-    const arr = Array.isArray(data) ? data : (data?.items || data?.data || []);
-    if (!Array.isArray(arr)) return [];
+    // Try to unwrap Lambda envelope: { statusCode, body: { videos: [...] } }
+    const unwrap = (() => {
+      if (!data) return [];
+      // If data is an array already
+      if (Array.isArray(data)) return data;
+      // If the lambda body has been stringified JSON, try to parse
+      const body = typeof data.body === 'string'
+        ? safeJsonParse(data.body)
+        : (data.body || {});
+      // Prefer body.videos
+      if (body && Array.isArray(body.videos)) return body.videos;
+      // Also handle top-level data.videos
+      if (Array.isArray(data.videos)) return data.videos;
+      // Some backends might return { items: [...] } or { data: [...] }
+      if (Array.isArray(data.items)) return data.items;
+      if (Array.isArray(data.data)) return data.data;
+      return [];
+    })();
 
-    return arr.map((item, idx) => {
-      const id = item.id || item._id || item.key || `s3-${idx}`;
+    return unwrap.map((item, idx) => {
+      const id = item.id || item._id || item.key || `video-${idx}`;
       const title =
         item.title ||
         item.name ||
         item.filename ||
-        item.displayName ||
         `Video ${idx + 1}`;
       const author =
         item.author ||
@@ -56,7 +81,6 @@ export default function Discover() {
         item.Location ||
         item.signedUrl ||
         item.videoUrl ||
-        item.playbackUrl ||
         '';
       const duration =
         item.duration ??
@@ -68,8 +92,10 @@ export default function Discover() {
         item.stars ??
         item.hearts ??
         0;
+      const genre = item.genre || item.category || item.type || null;
+      const uploadDate = item.uploadDate || item.date || item.createdAt || item.LastModified || null;
 
-      // cover/poster/thumbnail fields we might receive
+      // cover/poster/thumbnail when available
       const cover =
         item.cover_image ||
         item.cover ||
@@ -85,8 +111,10 @@ export default function Discover() {
         author,
         likes,
         duration,
-        url, // not directly used by FilmCard but useful for details page or future player
+        url,
         cover,
+        genre,
+        uploadDate,
       };
     });
   }, [data]);
@@ -120,10 +148,11 @@ export default function Discover() {
       <div className="row" style={{ marginBottom: 12 }}>
         <h2 style={{ margin: 0 }}>Discover</h2>
         <div className="space" />
-        <span className="pill">For you</span>
-        <span className="pill">New</span>
-        <span className="pill">Rising</span>
-        <span className="pill">Awarded</span>
+        {/* Future filtering controls (read-only for now) */}
+        <span className="pill" aria-pressed="true">For you</span>
+        <span className="pill" aria-pressed="false">New</span>
+        <span className="pill" aria-pressed="false">Rising</span>
+        <span className="pill" aria-pressed="false">Awarded</span>
       </div>
 
       {/* Loading and error states */}
@@ -135,8 +164,10 @@ export default function Discover() {
       {error && (
         <div className="card section" role="alert">
           Could not load videos from API.
-          {/* Developer note: Ensure REACT_APP_API_BASE is set and the endpoint exists.
-             Requested endpoint details: please provide the exact GET route returning S3 video metadata. */}
+          {/* Developer note:
+             Ensure REACT_APP_API_BASE or REACT_APP_API_BASE_URL is set and accessible.
+             This page integrates with the real Lambda-backed API at GET /videos_shortfilms.
+          */}
         </div>
       )}
 
@@ -145,7 +176,17 @@ export default function Discover() {
         {films.map((f, idx) => (
           <FilmCard
             key={f.id}
-            film={f}
+            film={{
+              id: f.id,
+              title: f.title,
+              author: f.author,
+              likes: f.likes,
+              duration: f.duration,
+              // Extra fields retained for future detail/player usage:
+              genre: f.genre,
+              uploadDate: f.uploadDate,
+              url: f.url,
+            }}
             placeholderImage={defaultPlaceholder}
             previewImage={pickPreviewImage(f, idx)}
           />
@@ -160,4 +201,12 @@ export default function Discover() {
       )}
     </div>
   );
+}
+
+function safeJsonParse(text) {
+  try {
+    return JSON.parse(text);
+  } catch {
+    return {};
+  }
 }

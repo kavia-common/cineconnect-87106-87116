@@ -23,8 +23,12 @@ Nota sobre Discover:
 ```
 cp .env.example .env
 ```
-2) Edita `.env` y define:
+2) Edita `.env` y define la URL base de tu API:
 ```
+# Si usas el gateway Lambda en AWS:
+REACT_APP_API_BASE_URL=https://s4myuxoa90.execute-api.us-east-2.amazonaws.com/devops
+
+# O si usas un backend local:
 REACT_APP_API_BASE=http://localhost:4000
 ```
 3) Instala y arranca
@@ -56,10 +60,12 @@ bash remove_features.sh --dry-run
 ```
 
 ## Variables de entorno
-- REACT_APP_API_BASE — Base URL del backend REST (requerido)
+- REACT_APP_API_BASE — Base URL del backend REST (desarrollo/local).
+- REACT_APP_API_BASE_URL — Base URL del API Gateway (Lambda) para producción o staging.
 
 Descubrir/Discover:
-- La página Discover usa un endpoint GET para listar videos que viven en S3. Se asume por defecto `/api/videos` en el frontend.
-- Por favor, confirma el path real del backend y su forma de respuesta. Una vez confirmado, actualiza `API_VIDEOS_PATH` en `src/pages/Discover.jsx` si difiere.
+- Ahora la página Discover integra el endpoint real GET `/videos_shortfilms` (Lambda/API Gateway).
+- El componente parsea `response.body.videos` según el código de Lambda y renderiza: título, género, autor, fecha de subida y URL del video (campos auxiliares quedan disponibles para futuras vistas).
+- Asegúrate de definir `REACT_APP_API_BASE_URL` (o `REACT_APP_API_BASE`) para que `ApiProvider` pueda construir las URLs correctas.
 
 No uses secretos reales en el repo; utiliza `.env` locales o variables de entorno en despliegue.

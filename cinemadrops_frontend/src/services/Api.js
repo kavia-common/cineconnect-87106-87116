@@ -3,9 +3,12 @@ import useSWR from 'swr';
 
 /**
  * API base configuration using env vars.
- * Note: Ask user to set REACT_APP_API_BASE and REACT_APP_WS_BASE in .env
+ * Note: Ask user to set REACT_APP_API_BASE_URL (preferred for API Gateway) or REACT_APP_API_BASE.
  */
-const API_BASE = process.env.REACT_APP_API_BASE || 'http://localhost:4000';
+const API_BASE =
+  process.env.REACT_APP_API_BASE_URL ||
+  process.env.REACT_APP_API_BASE ||
+  'http://localhost:4000';
 export const WS_BASE = process.env.REACT_APP_WS_BASE || 'ws://localhost:4000';
 
 /** Simple JSON fetcher with error handling */
