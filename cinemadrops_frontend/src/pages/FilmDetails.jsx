@@ -97,6 +97,41 @@ export default function FilmDetails() {
     flexWrap: 'wrap',
   };
 
+  // Local-only reactions state (no backend persistence yet)
+  const [reactions, setReactions] = useState(() => ({
+    dislike: 0,
+    like: film?.likes ? Math.max(0, Number(film.likes) || 0) : 0, // seed likes if available
+    love: 0,
+    lifeChanging: 0,
+  }));
+
+  const inc = (key) => {
+    setReactions((prev) => ({ ...prev, [key]: (prev[key] || 0) + 1 }));
+  };
+
+  // Small helper for accessible reaction buttons
+  const ReactionButton = ({ icon, label, count, onClick, ariaLabel }) => (
+    <button
+      type="button"
+      className="pill"
+      onClick={onClick}
+      aria-label={ariaLabel || label}
+      title={label}
+      style={{
+        cursor: 'pointer',
+        userSelect: 'none',
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 8,
+        background: 'var(--cd-chip-bg)',
+      }}
+    >
+      <span aria-hidden="true" role="img">{icon}</span>
+      <span>{label}</span>
+      <span className="badge" style={{ fontWeight: 800 }}>{count}</span>
+    </button>
+  );
+
   if (isLoading) {
     return (
       <div className="card section" role="status">
@@ -124,6 +159,40 @@ export default function FilmDetails() {
             <span className="pill" style={{ padding: '6px 10px', fontSize: 13 }}>⏱ {film.duration} min</span>
             <span className="pill" style={{ padding: '6px 10px', fontSize: 13 }}>★ {film.likes}</span>
           </div>
+
+          {/* Reactions row */}
+          <div style={{ height: 10 }} />
+          <div className="row" style={{ flexWrap: 'wrap', gap: 8 }}>
+            <ReactionButton
+              icon="👎"
+              label="Dislike"
+              ariaLabel="Dislike this short"
+              count={reactions.dislike}
+              onClick={() => inc('dislike')}
+            />
+            <ReactionButton
+              icon="👍"
+              label="Like"
+              ariaLabel="Like this short"
+              count={reactions.like}
+              onClick={() => inc('like')}
+            />
+            <ReactionButton
+              icon="❤️"
+              label="Love"
+              ariaLabel="Love this short"
+              count={reactions.love}
+              onClick={() => inc('love')}
+            />
+            <ReactionButton
+              icon="🌟"
+              label="Life changing"
+              ariaLabel="This short is life changing"
+              count={reactions.lifeChanging}
+              onClick={() => inc('lifeChanging')}
+            />
+          </div>
+
           <p className="muted" style={{ marginTop: 8, fontSize: 14, lineHeight: 1.45 }}>{film.description}</p>
         </div>
       </div>
@@ -178,6 +247,9 @@ export default function FilmDetails() {
   );
 }
 
+/**
+ * Normalize AWS film shape to local film object.
+ */
 function normalizeAwsFilm(body, slug) {
   // Accept several shapes; if body contains a 'video' or 'item' field, unwrap it
   const src = body?.video || body?.item || body?.data || body;
@@ -214,6 +286,9 @@ function normalizeAwsFilm(body, slug) {
   };
 }
 
+/**
+ * Fallback local film when backend not available.
+ */
 function fallback(id) {
   return {
     id,
