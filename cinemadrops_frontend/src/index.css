@@ -159,6 +159,13 @@ img { max-width: 100%; display: block; }
 .sidebar { display: flex; flex-direction: column; gap: 16px; }
 .sidebar .section { padding: 12px; }
 
+/* Collapsible helper (kept generic and playful) */
+@media (max-width: 700px) {
+  .sidebar .section .pill[aria-expanded] {
+    padding: 6px 10px;
+  }
+}
+
 /* Film grid
    Enlarge cards by reducing columns:
    - Desktop: 2 columns
