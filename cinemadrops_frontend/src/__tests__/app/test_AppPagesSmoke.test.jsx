@@ -9,7 +9,7 @@ import Forums from '../../pages/Forums';
 import FilmDetails from '../../pages/FilmDetails';
 import CreatorProfile from '../../pages/CreatorProfile';
 
-test('route: / renders Home', () => {
+test('route: / renders Home with Discover feed', () => {
   render(
     <MemoryRouter initialEntries={['/']}>
       <ApiProvider>

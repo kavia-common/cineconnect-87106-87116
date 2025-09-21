@@ -2,7 +2,8 @@ import React from 'react';
 
 /**
  * PUBLIC_INTERFACE
- * LeftSidebar shows playful filter controls and discovery tags.
+ * LeftSidebar shows playful filter controls.
+ * The "Discover with hashtags" section has been removed per request.
  */
 export default function LeftSidebar() {
   const tags = ['Drama', 'Comedy', 'Sci-Fi', 'Documentary', 'Animation', 'Horror', 'Experimental'];
@@ -27,16 +28,6 @@ export default function LeftSidebar() {
           <option value="5to15">5 - 15 min</option>
           <option value="gt15">&gt; 15 min</option>
         </select>
-      </div>
-
-      <div className="card section">
-        <strong>Discover</strong>
-        <div style={{ height: 10 }} />
-        <div className="row" style={{ flexWrap: 'wrap' }}>
-          {['#behindthescenes', '#script', '#newvoices', '#award', '#festival'].map(h => (
-            <span key={h} className="pill" style={{ margin: 4 }}>{h}</span>
-          ))}
-        </div>
       </div>
     </>
   );
